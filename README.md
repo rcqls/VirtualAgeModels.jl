@@ -1,2 +1,1 @@
-# VirtualAgeModels.jl
-Virtual Age Models for Julia
+## Moving VAM to julia
