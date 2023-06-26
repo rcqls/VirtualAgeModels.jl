@@ -1,4 +1,4 @@
-using VAM
+using VirtualAgeModels
 using Distributions
 
 vam = @vam(time & type ~ (ARAInf(0.4) | Weibull(0.001,2.5)))

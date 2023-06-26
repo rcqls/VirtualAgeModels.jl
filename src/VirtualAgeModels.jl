@@ -1,4 +1,4 @@
-module VAM
+module VirtualAgeModels
 
 using Random, DataFrames, Optim, Distributions
 export @vam, @stop, params, params!, nbparams, data, data!, simulator, sim, simulate, mle, bayesian

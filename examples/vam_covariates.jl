@@ -1,4 +1,4 @@
-using VAM
+using VirtualAgeModels
 using DataFrames
 using Distributions
 using RCall
@@ -37,8 +37,8 @@ mbis = @vam(System & Time & Type ~ (ARAInf(0.8)|Weibull(0.15,2.3|0.6cov1 + -0.9c
 ml = mle(mbis,dataDF,dataCov;method=NelderMead())
 mlbis = mle(mbis,dataDF,dataCov)
 
-VAM.params(ml.mle)
-sum(VAM.params(ml.mle) .- cres)
+params(ml.mle)
+sum(params(ml.mle) .- cres)
 contrast(ml.mle)
 
 m2 = @vam( time & type ~ (ARAInf(0.4) | Weibull(0.001,1.5)) )

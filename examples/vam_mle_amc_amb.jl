@@ -1,4 +1,4 @@
-using VAM
+using VirtualAgeModels
 using DataFrames
 #using RData
 using RCall
@@ -15,5 +15,5 @@ res <- coef(AMC_mle)
 
 m = @vam(Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)))
 mle(m, AMC_Amb)
-VAM.params(m)
+params(m)
 sum(abs.(res .- params(m)))

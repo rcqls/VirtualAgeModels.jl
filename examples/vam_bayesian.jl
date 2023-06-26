@@ -1,4 +1,4 @@
-using VAM
+using VirtualAgeModels
 
 m = @vam(Temps & Type ~ (ARA1(.4) | Weibull(0.01,2.5)))
 df = rand(m, @stop (size < 30))
