@@ -1,4 +1,4 @@
-using VAM
+using VirtualAgeModels
 using DataFrames
 
 data = DataFrame(time=[3.36],type=[-1])

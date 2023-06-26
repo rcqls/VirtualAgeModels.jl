@@ -1,4 +1,4 @@
-using VAM
+using VirtualAgeModels
 using DataFrames
 
 s = simulator(

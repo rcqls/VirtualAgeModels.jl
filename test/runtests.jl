@@ -1,5 +1,5 @@
 using Test
-using VAM
+using VirtualAgeModels
 using DataFrames
 using RCall
 
