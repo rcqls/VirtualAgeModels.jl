@@ -252,84 +252,75 @@ function data!(m::Model, i::Int)
 	end
 end
 
+# This methods only apply when data or datacov not empty
+# used inside MLE and parse_model
+function data!(m::Model, data::DataFrame, datacov::DataFrame)
+	if !isempty(data)
+        data!(m, data)
+    end
+    if !isempty(datacov)
+        covariates!(m)
+        covariates!(m, datacov)
+    end
+end
+
 function data(m::Model, i::Int)::DataFrame
 	data!(m, i) #;//Skipped if data is unset (see above)
 	return DataFrame(time=m.time,type=m.type)
 end
 
-function init_virtual_age_infos(m::Model)
-		# int i;
-    	# k=0;
-    	# idMod=0; //id of current model
-    	# S1 = 0;
-    	# Vright=0;
-    	# A=1;
-    	# for(i=0;i<nbPM + 1;i++) models->at(i)->init();
+function virtual_age_info(m::Model, v::AbstractVector{Float64}, exp_cov::Float64; type::Symbol=:i)
+	return if type == :i
+		exp_cov .* m.A .* (x -> hazard_rate(m.family, x)).(v) # hazard_rate.(m.family, v)
+	elseif type == :I
+		m.comp.S1 .+ exp_cov .* (x -> cumulative_hazard_rate(m.family, x)).(v) .- cumulative_hazard_rate(m.family, first(v))
+	elseif type == :F
+		1 .- exp.( -exp_cov .* (x -> cumulative_hazard_rate(m.family, x)).(v) .- cumulative_hazard_rate(m.family, first(v)))
+	elseif type == :S
+		exp.( -exp_cov .* (x -> cumulative_hazard_rate(m.family, x)).(v) .- cumulative_hazard_rate(m.family, first(v)))
+	elseif type == :f
+		exp_cov .* m.A .* (x -> hazard_rate(m.family, x)).(v) .* exp.( -exp_cov .* ((x -> cumulative_hazard_rate(m.family, x)).(v) .- cumulative_hazard_rate(m.family, first(v))))
+	end
 end
 
-function get_virtual_age_info(m::Model, from::Float64, to::Float64, by::Float64, expCov::Float64)
-# 	double s=ceil((to-from)/by);
-# 	int n=static_cast<int>(s);
-# //printf("ici=%d,%lf (%lf,%lf,%lf)\n",n,s,to,from,by);
-# 	std::vector<double> t(n+1);
-# 	std::vector<double> v(n+1);
-# 	std::vector<double> h(n+1); //i as intensity
-# 	std::vector<double> H(n+1); //I for cumulative intensity
-# 	std::vector<double> F(n+1); //F for conditional cumulative distribution function
-# 	std::vector<double> S(n+1); //S for conditional survival function
-# 	std::vector<double> f(n+1); //S for conditional survival function
-
-# 	t[0]=from;t[n]=to;
-# 	v[0]=virtual_age(from);v[n]=virtual_age(to);
-# 	h[0]=expCov*A*family->hazardRate(v[0]);h[n]=expCov*A*family->hazardRate(v[n]);
-# 	H[0]=S1;H[n]=S1+expCov*(family->cumulative_hazardRate(v[n])-family->cumulative_hazardRate(v[0]));
-# 	F[0]=0;F[n]=1-exp(-expCov*(family->cumulative_hazardRate(v[n])-family->cumulative_hazardRate(v[0])));
-# 	S[0]=1;S[n]=exp(-expCov*(family->cumulative_hazardRate(v[n])-family->cumulative_hazardRate(v[0])));
-# 	f[0]=expCov*A*family->hazardRate(v[0]);f[n]=expCov*A*family->hazardRate(v[n])*exp(-expCov*(family->cumulative_hazardRate(v[n])-family->cumulative_hazardRate(v[0])));
-# 	double by_t=(t[n]-t[0])/s;
-# 	double by_v=(v[n]-v[0])/s;
-
-# 	for(int i=1;i<n;i++) {
-# 		t[i]=t[i-1]+by_t;//printf("t[%d]=%lf\n",i,t[i]);
-# 		v[i]=v[i-1]+by_v;
-# 		h[i]=expCov*A*family->hazardRate(v[i]);
-# 		H[i]=S1+expCov*(family->cumulative_hazardRate(v[i])-family->cumulative_hazardRate(v[0]));
-# 		F[i]=1-exp(-expCov*(family->cumulative_hazardRate(v[i])-family->cumulative_hazardRate(v[0])));
-# 		S[i]=exp(-expCov*(family->cumulative_hazardRate(v[i])-family->cumulative_hazardRate(v[0])));
-# 		f[i]=expCov*A*family->hazardRate(v[i])*exp(-expCov*(family->cumulative_hazardRate(v[i])-family->cumulative_hazardRate(v[0])));
-# 	}
-
-# 	return DataFrame::create(
-# 		_["t"]=NumericVector(t.begin(),t.end()),
-# 		_["v"]=NumericVector(v.begin(),v.end()),
-# 		_["i"]=NumericVector(h.begin(),h.end()),
-# 		_["I"]=NumericVector(H.begin(),H.end()),
-# 		_["F"]=NumericVector(F.begin(),F.end()),
-# 		_["S"]=NumericVector(S.begin(),S.end()),
-# 		_["f"]=NumericVector(f.begin(),f.end())
-# 	);
+function virtual_age_info(m::Model, from::Float64, to::Float64, by::Float64, exp_cov::Float64; type::Symbol=:v)
+	t = from:by:to
+	v = range(virtual_age(m, from), virtual_age(m, to), length(t))
+	if type == :v
+		return (x=t, y=v)
+	else
+		return (x=t, y=virtual_age_info(m, v, exp_cov, type = type))
+	end
 end
 
-function get_virtual_age_infos(m::Model, from::Float64, to::Float64, by::Float64)
+function virtual_age_infos(m::Model, from::Float64, to::Float64, by::Float64 = 0.01; type::Symbol=:v)
 
-	# // Only one system first!
-	# init_virtual_age_infos();
-	# double expCov=1;
-	# if (nb_paramsCov>0) expCov=exp(compute_covariates());
-	# int n=time.size() - 1;
-	# List res(n);
-	# while(k < n) {
-	# 	//printf("k=%d/n=%d,(%lf,%lf)\n",k,n,time[k],time[k+1]);
-	# 	update_Vleft(false,false);
-	# 	if(from > time[k] || time[k+1] > to ) res[k] = R_NilValue;
-	# 	else res[k]=get_virtual_age_info(time[k],time[k+1],by,expCov);
-	# 	S1 += expCov*(family->cumulative_hazardRate(Vleft) - family->cumulative_hazardRate(Vright));
-	# 	//gradient_update_for_current_system();
-	# 	int type2=type[k + 1];
-	# 	if(type2 < 0) type2=0;
-	# 	models->at(type2)->update(false,false);
-	# }
-	# return res;
+	init_compute!(m) # for m.comp.S1
+    
+	## Something similar to init!(sim::Simulator)
+    m.Vright = 0
+    m.A = 1
+	m.k = 1
+	for mm in m.models
+        init!(mm)
+    end
+	m.id_mod = 0
+	infos = (x=[], y=[])
+	exp_cov = m.nb_params_cov > 0 ? exp(compute_covariates(m)) : 1.0
+	
+	for i=1:length(m.time)-1
+		update_Vleft!(m)
+		if from > m.time[i] || m.time[i + 1] > to  
+			nothing
+		else 
+			x, y = virtual_age_info(m, m.time[i], m.time[i + 1], by, exp_cov; type=type)
+			push!(infos.x, x)
+			push!(infos.y, y)
+		end
+		m.comp.S1 += exp_cov * (cumulative_hazard_rate(m.family, m.Vleft) - cumulative_hazard_rate(m.family, m.Vright))
+		update!(m.models[m.type[i + 1] + (m.type[i + 1] < 0 ? 2 : 1)], m)
+	end
+	return infos
 end
 
 function select_current_system(m::Model, i::Int, compute::Bool)
