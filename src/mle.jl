@@ -1,4 +1,4 @@
-function mle(model::Model, θ::Vector{Float64},  data::DataFrame, datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
+function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
     m = MLE(model, data, datacov)
     # Apply profile likelihood ony when α (at index 1) is not fixed
     profile = !(1 in fixed)
@@ -40,31 +40,31 @@ function mle(model::Model, θ::Vector{Float64},  data::DataFrame, datacov::DataF
     return (θ = params(model), optim = res, fixed = fixed, mle = m)
 end
 
-function mle(model::Model, data::DataFrame, datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
+function mle(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
     θ = params(model)
     mle(model, θ, data, datacov; fixed=fixed, method=method)
 end
 
-function contrast(model::Model, θ::Vector{Float64}, data::DataFrame; profile::Bool=true, datacov::DataFrame=DataFrame())::Float64
+function contrast(model::Model, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Float64
         m = MLE(model, data, datacov)
         return contrast(m, θ, profile = profile)
 end
 
-contrast(model::Model, data::DataFrame; profile::Bool=true, datacov::DataFrame=DataFrame()) = contrast(model, params(model), data; profile = profile, datacov = datacov)
+contrast(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = contrast(model, params(model), data; profile = profile, datacov = datacov)
 
-function gradient(model::Model, θ::Vector{Float64}, data::DataFrame; profile::Bool=true, datacov::DataFrame=DataFrame())::Vector{Float64}
+function gradient(model::Model, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Vector{Float64}
     m = MLE(model, data, datacov)
     return gradient(m, θ, profile = profile)
 end
 
-gradient(model::Model, data::DataFrame; profile::Bool=true, datacov::DataFrame=DataFrame()) = gradient(model, params(model), data; profile = profile, datacov = datacov)
+gradient(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = gradient(model, params(model), data; profile = profile, datacov = datacov)
 
-function hessian(model::Model, θ::Vector{Float64}, data::DataFrame; profile::Bool=true, datacov::DataFrame=DataFrame())::Matrix{Float64}
+function hessian(model::Model, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Matrix{Float64}
     m = MLE(model, data, datacov)
     return hessian(m, θ, profile = profile)
 end
 
-hessian(model::Model, data::DataFrame; profile::Bool=true, datacov::DataFrame=DataFrame()) = hessian(model, params(model), data; profile = profile, datacov = datacov)
+hessian(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = hessian(model, params(model), data; profile = profile, datacov = datacov)
 
 mutable struct MLE
     model::Model
@@ -74,22 +74,19 @@ mutable struct MLE
     comp::Compute
     MLE() = new()
 end
-function MLE(model::Model, data::DataFrame)::MLE
+
+function MLE(model::Model)::MLE
     mle = MLE()
     mle.model = model
     init!(mle.model)
     mle.comp = Compute(mle.model)
-    data!(mle.model, data)
     left_censors!(mle, Int[])
     return mle
 end
 
 function MLE(model::Model, data::DataFrame, datacov::DataFrame)::MLE
-    mle = MLE(model, data)
-    if !isempty(datacov)
-        covariates!(mle.model)
-        covariates!(mle.model, datacov)
-    end
+    mle = MLE(model)
+    data!(mle.model, data, datacov)
     return mle
 end
 params(m::MLE)::Vector{Float64} = params(m.model)

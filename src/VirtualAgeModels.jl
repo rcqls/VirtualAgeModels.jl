@@ -1,8 +1,14 @@
 module VirtualAgeModels
 
-using Random, DataFrames, Optim, Distributions
-export @vam, @stop, params, params!, nbparams, data, data!, simulator, sim, simulate, mle, bayesian
+using Random, DataFrames, Optim, Distributions, Plots
+import Base.first
+import Plots.plot
+
+
+export parse_model, @vam, @stop, params, params!, nbparams, data, data!, simulator, sim, simulate, mle, bayesian
 export contrast, gradient, hessian
+export plot
+
 
 abstract type AbstractModel end
 
@@ -20,6 +26,7 @@ include("family.jl")
 include("maintenance_model.jl")
 include("maintenance_policy.jl")
 include("model.jl")
+include("plots.jl")
 include("simulate.jl")
 include("mle.jl")
 include("bayesian.jl")

@@ -81,8 +81,15 @@ function parse_model(ex_f::Expr)
             ##No PM
             parse_cm!(m, ex_m)
         end
+        init!(m)
         return m
     end
+end
+
+function parse_model(ex_f::Expr, data::DataFrame, datacov::DataFrame)
+    m = parse_model(ex_f)
+    data!(m, data, datacov)
+    return m
 end
 
 function parse_cm!(m::AbstractModel,ex_cm::Expr)
@@ -156,8 +163,30 @@ function add_maintenance_model!(m::AbstractModel,ex_mm::Expr)
 end
 
 macro vam(ex_f)
-    return parse_model(ex_f)
+    return Expr(:call, :parse_model, QuoteNode(ex_f)) #parse_model(ex_f)
 end
+
+macro vam(ex_f, args...)
+    data, datacov = Expr(:call, :DataFrame), Expr(:call, :DataFrame)
+    for el in args # mimic kwargs for data and datacov
+        if Meta.isexpr(el, :(=))
+            if el.args[1] == :data
+                data = el.args[2]
+            elseif el.args[1] == :datacov
+                datacov = el.args[2]
+            end
+        end
+    end
+    return Expr(:call, :parse_model, QuoteNode(ex_f), esc(data), esc(datacov))
+end
+
+# macro vam(ex_f, data)
+#     return Expr(:call, :parse_model, QuoteNode(ex_f), esc(data))
+# end
+
+# macro vam(ex_f, data, datacov)
+#     return Expr(:call, :parse_model, QuoteNode(ex_f), esc(data), esc(datacov))
+# end
 
 macro stop(ex_s)
     return formula_translate(ex_s).args
