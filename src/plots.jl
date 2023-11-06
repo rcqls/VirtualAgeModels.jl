@@ -25,6 +25,8 @@ function plot!(m::Model, type::Symbol)
     plot!(m, symbol2typeplot[type])
 end
 
+## The following methods are more for internal use
+
 function plot(m::Model, ::Type{VirtualAgePlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end])
     # println(infos)

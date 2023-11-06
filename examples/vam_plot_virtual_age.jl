@@ -16,8 +16,14 @@ res <- coef(AMC_mle)
 
 @macroexpand  @vam(Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)))
 m = @vam Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)) data=AMC_Amb
-# mle(m, AMC_Amb)
+data(m)
+ml = mle(m, AMC_Amb)
+ml.optim
+params(m)
 
+m2 = @vam Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)) data=AMC_Amb
+ml2 = mle(m2)
+params(ml2)
 # plot(m, VirtualAgeModels.VirtualAgePlot)
 # plot(m, VirtualAgeModels.IntensityPlot)
 # plot(m, VirtualAgeModels.CummulativeIntensityPlot)

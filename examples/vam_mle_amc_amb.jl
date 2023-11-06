@@ -14,6 +14,18 @@ res <- coef(AMC_mle)
 @rget res
 
 m = @vam(Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)))
-mle(m, AMC_Amb)
+ml = mle(m, AMC_Amb)
+ml.model
+data(m)
+data(ml)
 params(m)
-sum(abs.(res .- params(m)))
+params(ml)
+sum(abs.(res .- params(ml)))
+
+m2 = @vam Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)) data=AMC_Amb
+data(m2)
+ml2 = mle(m2)
+data(m2)
+params(m2)
+params(ml2)
+sum(abs.(res .- params(ml2)))

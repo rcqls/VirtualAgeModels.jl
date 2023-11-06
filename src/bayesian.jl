@@ -10,13 +10,13 @@ mutable struct Bayesian
     Bayesian() = new()
 end
 
-function bayesian(model::Model, data::DataFrame; mode::ProposalMode = normal, method = Newton())
+function bayesian(model::Model; mode::ProposalMode = normal, method = Newton())
     if isbayesian(model)
         b = Bayesian()
         b.model = model
         b.mode = mode
         b.σ = 0.1
-        b.mle = MLE(model, data)
+        b.mle = MLE(model)
         return b
     else
         return nothing

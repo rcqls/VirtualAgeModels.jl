@@ -1,7 +1,5 @@
 function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
-    m = MLE(model, data, datacov)
-    # Apply profile likelihood ony when α (at index 1) is not fixed
-    profile = !(1 in fixed)
+    mle = MLE(model, data, datacov)
     # TODO: check boundary for fixed
     if fixed isa Vector{Bool}
         res = Int[]
@@ -12,15 +10,17 @@ function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), da
         end
         fixed = res
     end
+    # Apply profile likelihood only when α (at index 1) is not fixed
+    profile = !(1 in fixed)
     unfixed = setdiff(1:length(θ),fixed)
     p = θ[unfixed]
     function f(θ′)
         θ[unfixed] = θ′
-        -contrast(m, θ, profile = profile)
+        -contrast(mle, θ, profile = profile)
     end
     function g!(storage, θ′)
         θ[unfixed] = θ′
-        dlnL = gradient(m, θ, profile=profile)
+        dlnL = gradient(mle, θ, profile=profile)
         storage .= -dlnL[unfixed]
     end
     res = nothing
@@ -31,13 +31,17 @@ function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), da
     elseif method isa Optim.SecondOrderOptimizer
         function h!(storage, θ′)
             θ[unfixed] = θ′
-            storage .= -hessian(m, θ, profile=profile)[unfixed, unfixed]
+            storage .= -hessian(mle, θ, profile=profile)[unfixed, unfixed]
         end
         res = optimize(f, g!, h!, p, method=method)
     end
     p = θ
     p[unfixed] = Optim.minimizer(res)
-    return (θ = params(model), optim = res, fixed = fixed, mle = m)
+    mle.optim.result = res
+    mle.optim.fixed = fixed
+    mle.optim.profile = profile
+    params!(mle, p)
+    return mle
 end
 
 function mle(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
@@ -66,11 +70,18 @@ end
 
 hessian(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = hessian(model, params(model), data; profile = profile, datacov = datacov)
 
+mutable struct MLEOptim
+    profile::Bool # !(1 in fixed)
+    fixed::Vector{Int}
+    result
+    MLEOptim() = new()
+end
+
 mutable struct MLE
     model::Model
     left_censors::Vector{Int} #CAREFUL: this is a vector of indices!
     left_censor::Int #left_censor for current system
-
+    optim::MLEOptim
     comp::Compute
     MLE() = new()
 end
@@ -80,16 +91,28 @@ function MLE(model::Model)::MLE
     mle.model = model
     init!(mle.model)
     mle.comp = Compute(mle.model)
+    mle.optim = MLEOptim()
     left_censors!(mle, Int[])
     return mle
 end
 
 function MLE(model::Model, data::DataFrame, datacov::DataFrame)::MLE
-    mle = MLE(model)
+    mle = MLE()
+    mle.model = model
+    init!(mle.model)
     data!(mle.model, data, datacov)
+    mle.comp = Compute(mle.model)
+    mle.optim = MLEOptim()
+    left_censors!(mle, Int[])
     return mle
 end
-params(m::MLE)::Vector{Float64} = params(m.model)
+function params(mle::MLE)::Vector{Float64}
+    if mle.optim.profile
+        [αEst(mle, params(mle.model)); params(mle.model)[2:end]]
+    else
+        params(mle.model)
+    end
+end
 params!(m::MLE, θ::Vector{Float64}) = params!(m.model, θ)
 
 ## TODO: deal with left_censors
@@ -601,7 +624,7 @@ function hessian_update_current(mle::MLE)
 end
 
 function αEst(mle::MLE, param::Vector{Float64})
-    contrast(mle, param) #//To compute mle.comp.S1 and S0
+    #contrast(mle, param) #//To compute mle.comp.S1 and S0
     return mle.comp.S0 / mle.comp.S1
 end
 

@@ -1,11 +1,8 @@
 using VirtualAgeModels
 using DataFrames
 
-data = DataFrame(time=[3.36],type=[-1])
-m = VAM.MLE(
-	@vam(time & type ~ (ARAInf(0.4) | Weibull(0.001,2.5))), 
-	data
-)
+df = DataFrame(time=[3.36],type=[-1])
+m = @vam time & type ~ (ARAInf(0.4) | Weibull(0.001,2.5)) data=df
 θ = [0.3,1.8,0.6]
 lnL = -2.30449245951301
 dlnL = [-5.52619699756427,-1.45367181592636,0]
@@ -27,11 +24,9 @@ hessian(m, θ)
 # @run gradient(m, θ)
 # @run hessian(m, θ)
 
-data = DataFrame(time=[3.36],type=[-1])
-m = VAM.MLE(
-	@vam(Time & Type ~ (ARAInf(0.4) | LogLinear(0.001,2.5))), 
-	data
-)
+df = DataFrame(time=[3.36],type=[-1])
+m = @vam Time & Type ~ (ARAInf(0.4) | LogLinear(0.001,2.5)) data=df
+
 θ = [0.3,0.8,0.6]
 lnL = -3.65431355894635
 dlnL = [-13.7944691820681, -8.74189899224908, 0]
@@ -48,11 +43,8 @@ contrast(m,θ)
 gradient(m, θ)
 hessian(m, θ)
 
-data = DataFrame(time=[3.36],type=[-1])
-m = VAM.MLE(
-	@vam(Time & Type ~ (ARAInf(0.4) | Weibull3(0.001,2.5,5.0))),
-	data
-)
+df = DataFrame(time=[3.36],type=[-1])
+m =  @vam Time & Type ~ (ARAInf(0.4) | Weibull3(0.001,2.5,5.0)) data=df
 θ = [0.3,1.8,4,0.6]
 lnL =  -6.28349650594271
 dlnL = [-20.8805277090384,-14.1662361334174,-0.920550636729322,0]
@@ -68,11 +60,8 @@ gradient(m, θ)
 hessian(m, θ)
 
 
-data = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
-m = VAM.MLE(
-	@vam(Time & Type ~ (ARAInf(0.4) | Weibull(0.001,2.5))), 
-	data
-)
+df = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
+m = @vam Time & Type ~ (ARAInf(0.4) | Weibull(0.001,2.5)) data = df
 θ = [0.3,0.8,0.6]
 lnL = -7.37830963135462
 dlnL = [9.33348796771948,5.77076155284033,1.19923836457015]
@@ -88,11 +77,8 @@ gradient(m, θ)
 hessian(m, θ)
 
 
-data = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
-m = VAM.MLE(
-	@vam(Time & Type ~ (ARA1(0.4) | Weibull(0.001,2.5))), 
-	data
-)
+df = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
+m = @vam Time & Type ~ (ARA1(0.4) | Weibull(0.001,2.5)) data=df 
 θ = [0.3,0.8,0.6]
 lnL = -7.60531410020218
 dlnL = [9.43046924122556,6.95299388770745,0.950641033424141]
@@ -108,11 +94,8 @@ gradient(m, θ)
 hessian(m, θ)
 
 
-data = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
-m = VAM.MLE(
-	@vam(Time & Type ~ (AGAN() | Weibull(0.001,2.5))), 
-	data
-)
+df = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
+m = @vam Time & Type ~ (AGAN() | Weibull(0.001,2.5)) data=df 
 θ = [0.3,0.8]
 lnL = -6.90098251895707
 dlnL = [8.75359407434948,3.3717767832448]
@@ -128,11 +111,8 @@ gradient(m, θ)
 hessian(m, θ)
 
 
-data = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
-m = VAM.MLE(
-	@vam(Time & Type ~ (ABAO() | LogLinear(0.001,2.5))), 
-	data
-)
+df = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
+m = @vam Time & Type ~ (ABAO() | LogLinear(0.001,2.5)) data=df
 θ = [0.3,0.8]
 lnL = -13.6870254780068
 dlnL = [-62.9837808690102,-73.9249749593491]
@@ -148,16 +128,12 @@ gradient(m, θ)
 hessian(m, θ)
 
 
-data = DataFrame(
+df = DataFrame(
 	system=vcat([repeat([x],i) for (x, i) in [(1,4), (2,4), (3,4), (4,4), (5,7)]]...),
 	time=[3.36,4.04,4.97,5.16, 2.34,3.46,5.02,5.45, 1.18,2.22,3.14,4.83, 0.78,2.36,4.05,4.97, 2.45,2.78,3.56,4.23,5.32,6.43,6.98],
 	type=[1,1,1,1, -1,-1,-1,0, 1,-1,-1,1, -1,1,1,0, 1,-1,1,-1,-1,1,0]
 )
-m = VAM.MLE(
-	@vam(System & Time & Type ~ (ARAInf(0.4) | Weibull(0.001,2.5)) & (AGAN())), 
-	data
-)
-m.model.id_params
+m = @vam System & Time & Type ~ (ARAInf(0.4) | Weibull(0.001,2.5)) & (AGAN()) data=df
 θ = [0.3,1.8,0.3]
 lnL = -20.373593780469
 dlnL = [-25.6662791768442,-8.48131134572237,5.63552763127959]
@@ -172,14 +148,11 @@ contrast(m,θ)
 gradient(m, θ)
 hessian(m, θ)
 
-data = DataFrame(
+df = DataFrame(
 	time=[18.09,52.07,95.71,145.75,198.7,220.9],
 	type=[-1,-1,-1,-1,-1,-1]
 )
-m = VAM.MLE(
-	@vam( Time & Type ~ (ARAm(0.5,2) | Weibull(0.001,2.5))),
-	data
-)
+m = @vam Time & Type ~ (ARAm(0.5,2) | Weibull(0.001,2.5)) data=df
 θ = [0.03,2.4,0.7]
 lnL = -2600.46156675627
 dlnL = [-87032.7099834185,-10989.6661601188,6745.47891744838]

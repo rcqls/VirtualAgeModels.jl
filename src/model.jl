@@ -15,6 +15,7 @@ mutable struct Model <: AbstractModel
 	nb_params_maintenance::Int
     nb_params_family::Int
     nb_params_cov::Int
+	nb_data::Int
 
 	# index
 	id_mod::Int # current maintenance model
@@ -57,10 +58,15 @@ mutable struct Model <: AbstractModel
 
 	Model() = begin
 		m = new()
-		# init!(m)
-		init_covariates!(m)
+		make!(m)
 		return m
 	end
+end
+
+## Don't know if it is a good name
+function make!(m::Model)
+	m.nb_data = -1
+	init_covariates!(m)
 end
 
 function init!(m::Model)
@@ -86,11 +92,13 @@ function init!(m::Model)
 		m.nb_params_family = nbparams(m.family)
 		m.mu = max_memory(m)
 
-		m.data=DataFrame[]
-
-		## internal
-		m.time = Float64[]
-		m.type = Int[]
+		if m.nb_data < 0 # first data init
+			m.data = DataFrame[]
+			## internal
+			m.time = Float64[]
+			m.type = Int[]
+		end
+		m.nb_data = length(m.data)
 
 		m.indType = 0
 
@@ -266,8 +274,10 @@ end
 
 function data(m::Model, i::Int)::DataFrame
 	data!(m, i) #;//Skipped if data is unset (see above)
-	return DataFrame(time=m.time,type=m.type)
+	return DataFrame(time=m.time[2:end],type=m.type[2:end])
 end
+
+data(m::Model)=data(m, 1)
 
 function virtual_age_info(m::Model, v::AbstractVector{Float64}, exp_cov::Float64; type::Symbol=:i)
 	return if type == :i

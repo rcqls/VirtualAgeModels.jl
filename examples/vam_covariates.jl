@@ -7,14 +7,16 @@ using Optim
 m=5
 dfcov=DataFrame(cov1=rand(Uniform(),m), cov2=rand(Uniform(),m), cov3=rand(Uniform(),m))
 
-m = @vam( Time & Type ~ (ARAInf(0.4) | Weibull(0.001,1.5| 1*cov1 + -2cov2 + 3cov3)))
-df = rand(m, 29, datacov=dfcov)
+m = @vam( Time & Type ~ (ARAInf(0.4) | Weibull(0.001,1.5| 1*cov1 + -2cov2 + 3cov3)), datacov=dfcov)
+df = rand(m, 29)
 
 ml = mle(m,df,dfcov)
-contrast(ml.mle)
-contrast(ml.mle,[0.001,0.5,0.4,1.0,-2.0,3.0])
-gradient(ml.mle)
-params(ml.mle.model)
+contrast(ml)
+data(ml)
+VirtualAgeModels.covariates(ml.model)
+contrast(ml,[0.001,0.5,0.4,1.0,-2.0,3.0])
+gradient(ml)
+params(ml)
 m.params_cov
 m.vars_cov
 m.datacov
@@ -37,9 +39,9 @@ mbis = @vam(System & Time & Type ~ (ARAInf(0.8)|Weibull(0.15,2.3|0.6cov1 + -0.9c
 ml = mle(mbis,dataDF,dataCov;method=NelderMead())
 mlbis = mle(mbis,dataDF,dataCov)
 
-params(ml.mle)
-sum(params(ml.mle) .- cres)
-contrast(ml.mle)
+params(ml)
+sum(params(ml) .- cres)
+contrast(ml)
 
 m2 = @vam( time & type ~ (ARAInf(0.4) | Weibull(0.001,1.5)) )
 df2 = rand(m2, 29)
