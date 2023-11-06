@@ -19,7 +19,7 @@ function insert!(modtest::ModelTest, models::Vararg{Pair{Symbol, ModelDict}})
 	for model in models
 		m = model.second
 		if !(:r in  keys(m))
-			m[:r] = VAM.rterms(m[:vam], m[:data], (:datacov in keys(m)) ? m[:datacov] : DataFrame())
+			m[:r] = VirtualAgeModels.rterms(m[:vam], m[:data], (:datacov in keys(m)) ? m[:datacov] : DataFrame())
 			if :rform in keys(m)
 				m[:r][2] = m[:rform]
 			end
@@ -35,10 +35,11 @@ function update!(modtest::ModelTest, key::Symbol)
 	# println(model[:vam])
 	θ=model[:θ]
 	result = Dict()
-	m = if :datacov in keys(model)
-		VAM.MLE(model[:vam], model[:data], model[:datacov])
+	m = model[:vam]
+	if :datacov in keys(model)
+		data!(m, model[:data], model[:datacov])
 	else
-		VAM.MLE(model[:vam], model[:data])
+		data!(m, model[:data])
 	end
 	# println("update2")
 	# println(m.model)
