@@ -183,15 +183,15 @@ insert!(modtest,
     # )
 )
 
-insert!(modtest,
-    :W_ARA∞_2cov => Dict(
-        :θ => [0.15,2.3,0.8,0.6,-0.9],
-        :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),3,repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=repeat([-1],15)),
-        :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[0.0,0,0,1]),
-        :vam => @vam(System&Time&Type~(ARAInf(0.8)|Weibull(0.15,2.3|0.6*cov1 + -0.9*cov2))),
-        :rform => "System & Time & Type ~ (ARAInf(0.8)|Weibull(0.15,2.3|0.6*cov1 - 0.9*cov2))"
-    )
-)
+# insert!(modtest,
+#     :W_ARA∞_2cov => Dict(
+#         :θ => [0.15,2.3,0.8,0.6,-0.9],
+#         :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),3,repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=repeat([-1],15)),
+#         :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[0.0,0,0,1]),
+#         :vam => @vam(System&Time&Type~(ARAInf(0.8)|Weibull(0.15,2.3|0.6*cov1 + -0.9*cov2))),
+#         :rform => "System & Time & Type ~ (ARAInf(0.8)|Weibull(0.15,2.3|0.6*cov1 - 0.9*cov2))"
+#     )
+# )
 
 
 
@@ -206,15 +206,17 @@ key = :W_GQRSqrt
 # key = :W_ARAm2_ARAm4_MS
 key = :W_GQRARA1Log
 # key = :W_GQRARAm3Log
-key = :W_ARA∞_2cov
-modtest.models[key][:r]
-update!(modtest, key)
-test(modtest, key)
-modtest.results[key][:r]
-modtest.results[key][:jl]
 
 
+# key = :W_ARA∞_2cov
+# modtest.models[key][:r]
+# update!(modtest, key)
+# test(modtest, key)
+# modtest.results[key][:r]
+# modtest.results[key][:jl]
 
+update!(modtest, :W_ARA∞_MS)
+test(modtest, :W_ARA∞_MS)
 update!(modtest, :W_ARAm1)
 test(modtest, :W_ARAm1)
 update!(modtest, :W_ARAm1_vs_ARA1)
@@ -238,4 +240,4 @@ modtest.results[:W_ARAm∞_vs_ARA∞][:jl]
 update!(modtest)
 test(modtest)
 
-VAM.isbayesian(modtest.models[:W_ARAm∞][:vam].models[1])
+VirtualAgeModels.isbayesian(modtest.models[:W_ARAm∞][:vam].models[1])

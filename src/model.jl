@@ -73,7 +73,6 @@ function init!(m::Model)
 		m.k = 1  # current position in data
 		m.Δt = 0
 		m.current_system = 1 # current system
-		m.nb_system = 1 #number of system
 		if isdefined(m, :models) && length(m.models) > 0
 			m.nbPM = length(m.models) - 1
 		else
@@ -97,9 +96,9 @@ function init!(m::Model)
 			## internal
 			m.time = Float64[]
 			m.type = Int[]
+			m.nb_system = 1 #number of system
 		end
 		m.nb_data = length(m.data)
-
 		m.indType = 0
 
 		m.Vleft = 0

@@ -16,7 +16,7 @@ const Prior = Union{Nothing,Distribution}
 const Priors = Vector{Prior}
 const Parameter = Float64
 const Parameters = Vector{Float64}
-#const debugprint = println
+# const debugprint = println
 const debugprint(x) = ()
 
 include("tool.jl")

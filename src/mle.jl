@@ -100,7 +100,11 @@ function MLE(model::Model, data::DataFrame, datacov::DataFrame)::MLE
     mle = MLE()
     mle.model = model
     init!(mle.model)
-    data!(mle.model, data, datacov)
+
+    ## only if not already set!
+    if mle.model.nb_data < 0
+        data!(mle.model, data, datacov)
+    end
     mle.comp = Compute(mle.model)
     mle.optim = MLEOptim()
     left_censors!(mle, Int[])
@@ -128,7 +132,8 @@ function select_left_censor(mle::MLE, i::Int)
 end
 
 # Rcpp -> init_mle_vam_for_current_system
-function init_mle(mle::MLE; gradient::Bool=false)
+# deriv means gradient and hessian
+function init_mle(mle::MLE; deriv::Bool=false)
     for mm in mle.model.models
         init!(mm)
     end
@@ -139,14 +144,14 @@ function init_mle(mle::MLE; gradient::Bool=false)
     mle.model.k = 1
     mle.model.id_mod = 0 #id of current model
     mle.model.id_params = 1
-    init!(mle.model.comp, deriv=gradient)
+    init!(mle.model.comp, deriv=deriv)
 
     for type in mle.model.type
         if type < 0 
             mle.model.comp.S0 += 1
         end
     end
-    if gradient
+    if deriv
         # mle.model.dVright = zeros(mle.model.comp.nbd)
         # mle.model.dA = zeros(mle.model.comp.nbd)
         # nb2m = mle.model.nb_params_maintenance * (mle.model.nb_params_maintenance + 1) ÷ 2
@@ -304,7 +309,7 @@ end
 gradient(mle::MLE; profile::Bool=true) = gradient(mle, params(mle); profile=profile)
 
 function gradient_current(mle::MLE)
-    init_mle(mle, gradient = true)
+    init_mle(mle, deriv = true)
     n = length(mle.model.time)
     while mle.model.k < n
         gradient_update_current(mle)
@@ -507,7 +512,7 @@ hessian(mle::MLE; profile::Bool=true) = hessian(mle, params(mle); profile=profil
 
 function hessian_current(mle::MLE)
     npf, npm, npc = mle.model.nb_params_family - 1, mle.model.nb_params_maintenance, mle.model.nb_params_cov
-    init_mle(mle, gradient = true)
+    init_mle(mle, deriv = true)
     n = length(mle.model.time)
     while mle.model.k < n
         hessian_update_current(mle)
