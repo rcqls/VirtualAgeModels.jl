@@ -180,7 +180,8 @@ function update!(m::ARA1, model::AbstractModel; gradient::Bool=false, hessian::B
                 for i in 1:npm
                     for j in 1:i
                         ij = ind_ij(i, j)
-                        model.d2VR_prec[k * nd2d + ij ] = model.d2VR_prec[ (k - 1 ) * npm2 + ij]
+                        #model.d2VR_prec[k * nd2d + ij ] = model.d2VR_prec[ (k - 1 ) * npm2 + ij]
+                        model.d2VR_prec[k * npm2 + ij ] = model.d2VR_prec[ (k - 1 ) * npm2 + ij]#LD
                     end
                 end
             end
@@ -294,7 +295,7 @@ function update!(m::ARAInf, model::AbstractModel; gradient::Bool=false, hessian:
                 model.d2VR_prec[jj] -= model.dA[j] * model.Δt
                 model.d2Vright[jj] -= model.dVleft[j]
             end
-            for i in (model.id_params + 1):npm
+            for i in model.id_params:npm #LD: (model.id_params + 1):npm
                 ii = ind_ij(i, model.id_params)
                 model.d2VR_prec[ii] -= model.dA[i] * model.Δt
                 model.d2Vright[ii] -= model.dVleft[i]
@@ -310,7 +311,7 @@ function update!(m::ARAInf, model::AbstractModel; gradient::Bool=false, hessian:
                 jj = ind_ij(model.id_params, j)
                 model.d2Vright[jj] -= model.dVleft[j]
             end
-            for i in (model.id_params + 1):npm
+            for i in model.id_params:npm #LD: (model.id_params + 1):npm
                 model.d2Vright[ind_ij(i, model.id_params)] -= model.dVleft[i]
             end
         end
@@ -393,7 +394,7 @@ function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Boo
                     model.d2Vright[jj] -= model.dVR_prec[(nk2-1) * npm + j]
                     model.d2VR_prec[nk2 * npm2 + jj] -= model.dVR_prec[(nk2-1) * npm + j]
                 end
-                for i in (model.id_params + 1):npm
+                for i in model.id_params:npm#LD: (model.id_params + 1):npm
                     ii = ind_ij(i, model.id_params)
                     model.d2Vright[ii] -= model.dVR_prec[(nk2 - 1) * npm + i]
                     model.d2VR_prec[nk2 * npm2 + ii] -= model.dVR_prec[(nk2-1) * npm + i]
@@ -408,7 +409,7 @@ function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Boo
                 for j in 1:model.id_params 
                     model.d2Vright[ind_ij(model.id_params, j)] -= model.dVR_prec[(nk2 - 1) * npm + j]
                 end
-                for i in (model.id_params + 1):npm  
+                for i in model.id_params:npm #LD: (model.id_params + 1):npm
                     model.d2Vright[ind_ij(i, model.id_params)] -= model.dVR_prec[(nk2 - 1) * npm + i]
                 end
             end
@@ -428,7 +429,7 @@ function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Boo
                     model.d2Vright[jj] -= model.dVR_prec[(k - 1) * npm + j]
                     model.d2VR_prec[k * npm2 + jj] -= model.dVR_prec[(k - 1) * npm + j]
                 end
-                for i in (model.id_params + 1):npm
+                for i in model.id_params:npm#LD: (model.id_params + 1):npm
                     ii = ind_ij(i, model.id_params)
                     model.d2Vright[ii] -= model.dVR_prec[(k - 1) * npm + i]
                     model.d2VR_prec[k * npm2 + ii] -= model.dVR_prec[(k - 1) * npm + i]
@@ -450,7 +451,7 @@ function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Boo
                 model.d2VR_prec[jj] -= prov
                 model.d2Vright[jj] -= prov
             end
-            for i in (model.id_params + 1):npm
+            for i in model.id_params:npm#LD: (model.id_params + 1):npm
                 ii = ind_ij(i, model.id_params)
                 prov = model.dA[i]*model.Δt
                 model.d2VR_prec[ii] -= prov
@@ -466,7 +467,7 @@ function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Boo
             for j in 1:model.id_params
                 model.d2Vright[ind_ij(model.id_params, j)] -= model.dA[j] * model.Δt
             end
-            for i in (model.id_params + 1):npm
+            for i in model.id_params:npm#LD: (model.id_params + 1):npm
                 model.d2Vright[ind_ij(i, model.id_params)] -= model.dA[i] * model.Δt
             end
         end
