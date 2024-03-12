@@ -298,7 +298,9 @@ function gradient(mle::MLE, θ::Vector{Float64}; profile::Bool=true)::Vector{Flo
     np += mle.model.nb_params_maintenance
     if mle.model.nb_params_cov > 0
         for i in 1:mle.model.nb_params_cov
-            res[i + np] = -mle.comp.dS1[i + np] * θ[1] + mle.comp.dS4[i]
+            #LD
+            res[i + np] = -mle.comp.dS1[i + np - 1] * θ[1] + mle.comp.dS4[i]
+            #res[i + np] = -mle.comp.dS1[i + np] * θ[1] + mle.comp.dS4[i]
             # println("jl: res[$(i + np)] = $(-mle.comp.dS1[i + np]) * $(θ[1]) + $(mle.comp.dS4[i])")
         end
     end
@@ -408,102 +410,192 @@ function hessian(mle::MLE, θ::Vector{Float64}; profile::Bool=true)::Matrix{Floa
             hessian_current(mle)
         end
     end
-    # println("dS1=$(mle.comp.dS1) dS2=$(mle.comp.dS2) ")
-    # println("d2S1=$(mle.comp.d2S1) d2S2=$(mle.comp.d2S3) d2S2=$(mle.comp.d2S3) ")
-    # //compute hessian
-    if profile
-        res[1,1] = 0
-        for i in 1:(mle.model.nb_params_family - 1)
-            ii = ind_ij(i, i)
-            res[1, i + 1] = 0
-            res[i + 1, 1] = 0
-            res[i + 1, i + 1] = mle.comp.dS1[i]^2 / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ii]/mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ii]
-            for j in 1:i # ?? or for j in 0:(i - 1)
-                ij = ind_ij(i, j)
-                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
-                res[i + 1, j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ij]
-                res[j + 1, i + 1] = res[i + 1,j + 1]
-            end
+
+    #verif d2Sommes
+    #print("jl: d2S1:")
+    #for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance + mle.model.nb_params_cov -1)
+    #    for j in 1:i
+    #        ij = ind_ij(i, j)
+    #        print("[$ij]=$(mle.comp.d2S1[ij]), ")
+    #    end
+    #end
+    #print("\n")
+    #print("jl: d2S2:")
+    #for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance -1)
+    #    for j in 1:i
+    #        ij = ind_ij(i, j)
+    #        print("[$ij]=$(mle.comp.d2S2[ij]), ")
+    #    end
+    #end
+    #print("\n")
+    #print("jl: d2S3:")
+    #for i in 1:(mle.model.nb_params_maintenance)
+    #    for j in 1:i
+    #        ij = ind_ij(i, j)
+    #        print("[$ij]=$(mle.comp.d2S3[ij]), ")
+    #    end
+    #end
+    #print("\n")
+    
+
+    # LD: compute hessian
+    θ[1] = profile ? mle.comp.S0 / mle.comp.S1 : α
+
+    params!(mle.model, θ) # also memorize the current value for alpha which is not 1 in fact
+
+    if !profile
+        res[1, 1] = - mle.comp.S0 / α^2
+        for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance + mle.model.nb_params_cov -1)
+            res[1,i + 1] = - mle.comp.dS1[i]
+            res[i + 1,1] = res[1,i + 1]
         end
-        for i in mle.model.nb_params_family:(mle.model.nb_params_maintenance + mle.model.nb_params_family - 2)
-            ii = ind_ij(i, i)
-            res[1, i + 1] = 0
-            res[i + 1, 1] = 0
-            res[i + 1, i + 1] = mle.comp.dS1[i]^2 / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ii] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ii] + mle.comp.d2S3[(i - 1 -(mle.model.nb_params_family - 1)) * (i -(mle.model.nb_params_family - 1)) ÷ 2 + i - (mle.model.nb_params_family-1)]
-            for j in 1:(mle.model.nb_params_family-1)
-                ij = ind_ij(i, j)
-                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
-                res[i + 1, j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ij]
-                res[j + 1, i + 1] = res[i + 1, j + 1]
-            end
-            for j in mle.model.nb_params_family:i
-                ij = ind_ij(i, j)
-                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
-                res[i + 1, j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ij] + mle.comp.d2S3[(i - (mle.model.nb_params_family-1)) * (i - (mle.model.nb_params_family - 1) + 1) ÷ 2 + j - (mle.model.nb_params_family - 1)]
-                res[j + 1, i + 1] = res[i + 1, j + 1]
-            end
-        end
-        for i in (mle.model.nb_params_maintenance + mle.model.nb_params_family):(mle.model.nb_params_maintenance + mle.model.nb_params_family + mle.model.nb_params_cov - 1)
-            ii = ind_ij(i, i)
-            res[1, i + 1] = 0
-            res[i + 1, 1] = 0
-            res[i + 1, i + 1] = mle.comp.dS1[i] ^2 / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ii] / mle.comp.S1 * mle.comp.S0
-            for j in 1:i
-                ij = ind_ij(i, j)
-                res[i + 1,j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0
-                res[j + 1,i + 1] = res[i + 1,j + 1]
-            end
-        end
-        θ[1] = mle.comp.S0 / mle.comp.S1
-        params!(mle.model, θ) #;//also memorize the current value for alpha which is not 1 in fact
     else
-
-        res[1, 1] = -mle.comp.S0 / α^2
-        for i in 1:(mle.model.nb_params_family-1)
-            ii = ind_ij(i, i)
-            res[1,i + 1] = -mle.comp.dS1[i]
-            res[i + 1,1] = -mle.comp.dS1[i]
-            res[i + 1,i + 1] = mle.comp.d2S2[ii] - α * mle.comp.d2S1[ii]
+        for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance + mle.model.nb_params_cov - 1)
             for j in 1:i
-                ij = ind_ij(i, j)
-                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
-                res[i + 1,j + 1] = mle.comp.d2S2[ij] - α * mle.comp.d2S1[ij]
+                res[i + 1,j + 1] = mle.comp.S0 / mle.comp.S1^2 * mle.comp.dS1[i] * mle.comp.dS1[j]
                 res[j + 1,i + 1] = res[i + 1,j + 1]
             end
         end
-        for i in mle.model.nb_params_family:(mle.model.nb_params_maintenance + mle.model.nb_params_family - 1)
-            ii = ind_ij(i, i)
-            res[1, i + 1] = -mle.comp.dS1[i]
-            res[i + 1, 1] = -mle.comp.dS1[i]
-            res[i + 1, i + 1] = mle.comp.d2S2[ii] - α * mle.comp.d2S1[ii] + mle.comp.d2S3[ind_ij(i-(mle.model.nb_params_family-1), i - (mle.model.nb_params_family - 1))]
-            for j in 1:(mle.model.nb_params_family - 1)
-                ij = ind_ij(i, j)
-                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
-                res[i + 1, j + 1] = mle.comp.d2S2[ij] - α * mle.comp.d2S1[ij]
-                res[j + 1, i + 1] = res[i + 1, j + 1]
-            end
-            for j in mle.model.nb_params_family:(i - 1)
-                ij = ind_ij(i, j)
-                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
-                res[i + 1, j + 1] = mle.comp.d2S2[ij] - α * mle.comp.d2S1[ij] + mle.comp.d2S3[ind_ij(i - (mle.model.nb_params_family - 1), j - (mle.model.nb_params_family - 1))]
-                res[j + 1, i + 1] = res[i + 1, j + 1]
-            end
-        end
-        for i in (mle.model.nb_params_maintenance+mle.model.nb_params_family):(mle.model.nb_params_maintenance+mle.model.nb_params_family + mle.model.nb_params_cov - 1)
-            ii = ind_ij(i, i)
-            res[1, i + 1] = -mle.comp.dS1[i]
-            res[i + 1, 1] = -mle.comp.dS1[i]
-            res[i + 1, i + 1] = -α * mle.comp.d2S1[ii]
-            for j in 1:i
-                ij = ind_ij(i, j)
-                res[i + 1, j + 1] = -α * mle.comp.d2S1[ij]
-                res[j + 1, i + 1] = res[i + 1 , j + 1]
-            end
-        end
-        θ[1] = α
-        params!(mle.model, θ) #also memorize the current value for alpha which is not 1 in fact
-
     end
+
+    for i in 1:(mle.model.nb_params_family - 1)
+        for j in 1:i
+            ij = ind_ij(i, j)
+            res[i + 1,j + 1] += mle.comp.d2S2[ij] - θ[1] * mle.comp.d2S1[ij]
+            res[j+ 1,i + 1] = res[i + 1,j + 1]
+        end
+    end
+    np = mle.model.nb_params_family
+    if mle.model.nb_params_maintenance > 0
+        for i in 1:mle.model.nb_params_maintenance
+            for j in 1:(mle.model.nb_params_family - 1)
+                ij = ind_ij(i + np - 1, j)
+                res[i + np,j + 1] += mle.comp.d2S2[ij] - θ[1] * mle.comp.d2S1[ij]
+                res[j + 1,i + np] = res[i + np,j + 1]
+            end
+            for j in 1:mle.model.nb_params_maintenance
+                ij = ind_ij(i + np - 1,j + np - 1)
+                ij_2 = ind_ij(i ,j)
+                res[i + np,j + np] += mle.comp.d2S2[ij] - θ[1] * mle.comp.d2S1[ij] + mle.comp.d2S3[ij_2]
+                res[j + np,i + np] = res[i + np,j + np]
+            end
+        end
+    end
+    np += mle.model.nb_params_maintenance
+    if mle.model.nb_params_cov > 0
+        for i in 1:mle.model.nb_params_cov
+            for j in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance - 1)
+                ij = ind_ij(i + np - 1, j)
+                res[i + np,j + 1] += - θ[1] * mle.comp.d2S1[ij]
+                res[j + 1,i + np] = res[i + np,j + 1]
+            end
+            for j in 1:mle.model.nb_params_cov
+                ij = ind_ij(i + np - 1,j + np - 1)
+                ij_2 = ind_ij(i ,j)
+                res[i + np,j + np] += - θ[1] * mle.comp.d2S1[ij] + mle.comp.d2S4[ij_2]
+                res[j + np,i + np] = res[i + np,j + np]
+            end
+        end
+    end
+# End LD
+
+#    # println("dS1=$(mle.comp.dS1) dS2=$(mle.comp.dS2) ")
+#    # println("d2S1=$(mle.comp.d2S1) d2S2=$(mle.comp.d2S3) d2S2=$(mle.comp.d2S3) ")
+#    # //compute hessian
+#    if profile
+#        res[1,1] = 0
+#        for i in 1:(mle.model.nb_params_family - 1)
+#            ii = ind_ij(i, i)
+#            res[1, i + 1] = 0
+#            res[i + 1, 1] = 0
+#            res[i + 1, i + 1] = mle.comp.dS1[i]^2 / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ii]/mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ii]
+#            for j in 1:i # ?? or for j in 0:(i - 1)
+#                ij = ind_ij(i, j)
+#                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
+#                res[i + 1, j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ij]
+#                res[j + 1, i + 1] = res[i + 1,j + 1]
+#            end
+#        end
+#        for i in mle.model.nb_params_family:(mle.model.nb_params_maintenance + mle.model.nb_params_family - 1)#avt LD : -2)
+#            ii = ind_ij(i, i)
+#            res[1, i + 1] = 0
+#            res[i + 1, 1] = 0
+#            #res[i + 1, i + 1] = mle.comp.dS1[i]^2 / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ii] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ii] + mle.comp.d2S3[(i - 1 -(mle.model.nb_params_family - 1)) * (i -(mle.model.nb_params_family - 1)) ÷ 2 + i - (mle.model.nb_params_family-1)]
+#            res[i + 1, i + 1] = mle.comp.dS1[i]^2 / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ii] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ii] + mle.comp.d2S3[ind_ij(i-mle.model.nb_params_maintenance+1, i-mle.model.nb_params_maintenance+1)]#LD
+#            for j in 1:(mle.model.nb_params_family-1)
+#                ij = ind_ij(i, j)
+#                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
+#                res[i + 1, j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ij]
+#                res[j + 1, i + 1] = res[i + 1, j + 1]
+#            end
+#            for j in mle.model.nb_params_family:i
+#                ij = ind_ij(i, j)
+#                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
+#                res[i + 1, j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0 + mle.comp.d2S2[ij] + mle.comp.d2S3[(i - (mle.model.nb_params_family-1)) * (i - (mle.model.nb_params_family - 1) + 1) ÷ 2 + j - (mle.model.nb_params_family - 1)]
+#                res[j + 1, i + 1] = res[i + 1, j + 1]
+#            end
+#        end
+#        for i in (mle.model.nb_params_maintenance + mle.model.nb_params_family):(mle.model.nb_params_maintenance + mle.model.nb_params_family + mle.model.nb_params_cov - 1)
+#            ii = ind_ij(i, i)
+#            res[1, i + 1] = 0
+#            res[i + 1, 1] = 0
+#            res[i + 1, i + 1] = mle.comp.dS1[i] ^2 / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ii] / mle.comp.S1 * mle.comp.S0
+#            for j in 1:i
+#                ij = ind_ij(i, j)
+#                res[i + 1,j + 1] = mle.comp.dS1[i] * mle.comp.dS1[j] / mle.comp.S1^2 * mle.comp.S0 - mle.comp.d2S1[ij] / mle.comp.S1 * mle.comp.S0
+#                res[j + 1,i + 1] = res[i + 1,j + 1]
+#            end
+#        end
+#        θ[1] = mle.comp.S0 / mle.comp.S1
+#        params!(mle.model, θ) #;//also memorize the current value for alpha which is not 1 in fact
+#    else
+#
+#        res[1, 1] = -mle.comp.S0 / α^2
+#        for i in 1:(mle.model.nb_params_family-1)
+#            ii = ind_ij(i, i)
+#            res[1,i + 1] = -mle.comp.dS1[i]
+#            res[i + 1,1] = -mle.comp.dS1[i]
+#            res[i + 1,i + 1] = mle.comp.d2S2[ii] - α * mle.comp.d2S1[ii]
+#            for j in 1:i
+#                ij = ind_ij(i, j)
+#                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
+#                res[i + 1,j + 1] = mle.comp.d2S2[ij] - α * mle.comp.d2S1[ij]
+#                res[j + 1,i + 1] = res[i + 1,j + 1]
+#            end
+#        end
+#        for i in mle.model.nb_params_family:(mle.model.nb_params_maintenance + mle.model.nb_params_family - 1)
+#            ii = ind_ij(i, i)
+#            res[1, i + 1] = -mle.comp.dS1[i]
+#            res[i + 1, 1] = -mle.comp.dS1[i]
+#            res[i + 1, i + 1] = mle.comp.d2S2[ii] - α * mle.comp.d2S1[ii] + mle.comp.d2S3[ind_ij(i-(mle.model.nb_params_family-1), i - (mle.model.nb_params_family - 1))]
+#            for j in 1:(mle.model.nb_params_family - 1)
+#                ij = ind_ij(i, j)
+#                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
+#                res[i + 1, j + 1] = mle.comp.d2S2[ij] - α * mle.comp.d2S1[ij]
+#                res[j + 1, i + 1] = res[i + 1, j + 1]
+#            end
+#            for j in mle.model.nb_params_family:(i - 1)
+#                ij = ind_ij(i, j)
+#                #//i and j(<=i) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
+#                res[i + 1, j + 1] = mle.comp.d2S2[ij] - α * mle.comp.d2S1[ij] + mle.comp.d2S3[ind_ij(i - (mle.model.nb_params_family - 1), j - (mle.model.nb_params_family - 1))]
+#                res[j + 1, i + 1] = res[i + 1, j + 1]
+#            end
+#        end
+#        for i in (mle.model.nb_params_maintenance+mle.model.nb_params_family):(mle.model.nb_params_maintenance+mle.model.nb_params_family + mle.model.nb_params_cov - 1)
+#            ii = ind_ij(i, i)
+#            res[1, i + 1] = -mle.comp.dS1[i]
+#            res[i + 1, 1] = -mle.comp.dS1[i]
+#            res[i + 1, i + 1] = -α * mle.comp.d2S1[ii]
+#            for j in 1:i
+#                ij = ind_ij(i, j)
+#                res[i + 1, j + 1] = -α * mle.comp.d2S1[ij]
+#                res[j + 1, i + 1] = res[i + 1 , j + 1]
+#            end
+#        end
+#        θ[1] = α
+#        params!(mle.model, θ) #also memorize the current value for alpha which is not 1 in fact
+#
+#    end
     θ[1] = α # LD:changed for bayesian
     return res
 end
@@ -582,14 +674,18 @@ function hessian_update_current(mle::MLE)
     for i in 1:npf
         if mle.model.k >= mle.left_censor 
             mle.model.comp.dS1[i] +=  cumhVleft_param_derivative[i] - cumhVright_param_derivative[i]
+            #print("j0: $(mle.model.comp.dS1[i])\n")##LDprint
         end
         mle.model.comp.dS2[i] += hVleft_param_derivative[i] / mle.model.hVleft * mle.model.indType ;
+        #print("j1: $(mle.model.comp.dS2[i])\n")##LDprint
         for j in 1:i
             ij = ind_ij(i, j)
             if mle.model.k >= mle.left_censor 
                 mle.model.comp.d2S1[ij] += cumhVleft_param_2derivative[ij] - cumhVright_param_2derivative[ij]
+                #print("j2: $(mle.model.comp.d2S1[ij])\n")##LDprint
             end
             mle.model.comp.d2S2[ij] += (hVleft_param_2derivative[ij] / mle.model.hVleft - hVleft_param_derivative[i] * hVleft_param_derivative[j] / mle.model.hVleft^2) * mle.model.indType
+            #print("j3: $(mle.model.comp.d2S2[ij])\n")##LDprint
         end
     end
     hVright = hazard_rate(mle.model.family, mle.model.Vright)
@@ -602,9 +698,11 @@ function hessian_update_current(mle::MLE)
     for i in 1:npm
         if mle.model.k >= mle.left_censor
             mle.model.comp.dS1[i + npf] += mle.model.hVleft * mle.model.dVleft[i] - hVright * mle.model.dVright[i];
+            #print("j4: $(mle.model.comp.dS1[i + npf])\n")##LDprint
         end
         # //printf("dS1[%d]=(%lf,%lf,%lf),%lf,",i+1,model.hVleft,model.dVleft[i],model.dVright[i],model.dS1[i+1]);
         mle.model.comp.dS2[i + npf] +=  dhVleft * mle.model.dVleft[i] / mle.model.hVleft * mle.model.indType
+        #print("j5: $(mle.model.comp.dS2[i + npf])\n")##LDprint
         #//printf("dS2[%d]=%lf,",i+1,model.dS2[i+1]);
         #//column 0 and i+1 corresponds to the line indice of (inferior diagonal part of) the hessian matrice
         mle.model.comp.dS3[i] +=  mle.model.dA[i] / mle.model.A * mle.model.indType;
@@ -612,17 +710,24 @@ function hessian_update_current(mle::MLE)
             ij = ind_ij(i + npf, j)
             if mle.model.k >= mle.left_censor
                 mle.model.comp.d2S1[ij] += hVleft_param_derivative[j] * mle.model.dVleft[i] - hVright_param_derivative[j] * mle.model.dVright[i]
+                #print("j6: $(mle.model.comp.d2S1[ij])\n")##LDprint
             end
             mle.model.comp.d2S2[ij] +=  dhVleft_param_derivative[j] * mle.model.dVleft[i] / mle.model.hVleft * mle.model.indType - hVleft_param_derivative[j] * dhVleft * mle.model.dVleft[i] / mle.model.hVleft^2 * mle.model.indType
+            #print("j7: $(mle.model.comp.d2S2[ij])\n")##LDprint
         end
         for j=1:i
             #//i+1 and j+1(<=i+1) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
             ijp = ind_ij(i + npf, j + npf)
             ij = ind_ij(i, j)
             if mle.model.k >= mle.left_censor
+                #print("j-8: $(mle.model.comp.d2S1[ijp])\n")##LDprint
+                #print("jj8: 0:$ijp,$ij, 1:$(dhVleft),  2:$(mle.model.dVleft[i]), 3:$(mle.model.dVleft[j]), 4:$(mle.model.hVleft), 5:$(mle.model.d2Vleft[ij]), 6:$(dhVright), 7:$(mle.model.dVright[i]), 8:$(mle.model.dVright[j]), 9:$(hVright), 10:$(mle.model.d2Vright[ij])\n")
                 mle.model.comp.d2S1[ijp] += dhVleft * mle.model.dVleft[i] * mle.model.dVleft[j] + mle.model.hVleft * mle.model.d2Vleft[ij] - dhVright * mle.model.dVright[i] * mle.model.dVright[j] - hVright * mle.model.d2Vright[ij]
+                #print("j8:  $(mle.model.comp.d2S1[ijp])\n")##LDprint
             end
+            #print("j-9:  $(mle.model.comp.d2S2[ijp])\n")##LDprint
             mle.model.comp.d2S2[ijp] += (mle.model.dVleft[i] * mle.model.dVleft[j] * (d2hVleft / mle.model.hVleft - (dhVleft / mle.model.hVleft)^2) + dhVleft * mle.model.d2Vleft[ij] / mle.model.hVleft) * mle.model.indType
+            #print("j9:  $(mle.model.comp.d2S2[ijp])\n")##LDprint
             mle.model.comp.d2S3[ij] += (mle.model.d2A[ij] / mle.model.A - mle.model.dA[i] * mle.model.dA[j] / mle.model.A^2) * mle.model.indType
         end
     end

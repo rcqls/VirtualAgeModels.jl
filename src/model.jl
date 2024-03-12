@@ -184,6 +184,7 @@ function update_Vleft!(m::Model; gradient::Bool=false, hessian::Bool=false)
 				for j in 1:i
 					ij = ind_ij(i, j)
 					m.d2Vleft[ij]= m.d2Vright[ij] + (m.time[m.k+1]  - m.time[m.k]) * m.d2A[ij]
+					#print("jV1:  l:$(m.d2Vleft[ij]), r:$(m.d2Vleft[ij])\n")##LDprint
 				end
 			end
 		end
