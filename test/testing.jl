@@ -79,7 +79,7 @@ end
 function test(modtest::ModelTest;atol=0.0000000001)
 	for (key, result) in modtest.results
 		@testset verbose = true "model $key" begin
-			@testset "result $k" for k in [:lnL, :dlnL, :C, :dC]
+			@testset "result $k" for k in [:lnL, :dlnL, :d2lnL, :C, :dC, :d2C]
 				@test result[:jl][k] ≈ result[:r][k] atol=atol
 			end
 		end
@@ -89,7 +89,7 @@ end
 function test(modtest::ModelTest, key::Symbol;atol=0.0000000001)
 	result = modtest.results[key]
 	@testset verbose = true "model $key" begin
-		@testset "result $k" for k in [:lnL, :dlnL, :C, :dC]
+		@testset "result $k" for k in [:lnL, :dlnL, :d2lnL, :C, :dC, :d2C]
 			@test result[:jl][k] ≈ result[:r][k] atol=atol
 		end
 	end

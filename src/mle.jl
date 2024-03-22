@@ -412,32 +412,34 @@ function hessian(mle::MLE, θ::Vector{Float64}; profile::Bool=true)::Matrix{Floa
     end
 
     #verif d2Sommes
-    #print("jl: d2S1:")
-    #for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance + mle.model.nb_params_cov -1)
-    #    for j in 1:i
-    #        ij = ind_ij(i, j)
-    #        print("[$ij]=$(mle.comp.d2S1[ij]), ")
-    #    end
-    #end
-    #print("\n")
-    #print("jl: d2S2:")
-    #for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance -1)
-    #    for j in 1:i
-    #        ij = ind_ij(i, j)
-    #        print("[$ij]=$(mle.comp.d2S2[ij]), ")
-    #    end
-    #end
-    #print("\n")
-    #print("jl: d2S3:")
-    #for i in 1:(mle.model.nb_params_maintenance)
-    #    for j in 1:i
-    #        ij = ind_ij(i, j)
-    #        print("[$ij]=$(mle.comp.d2S3[ij]), ")
-    #    end
-    #end
-    #print("\n")
+    if false
+    print("jl: d2S1:")
+    for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance + mle.model.nb_params_cov -1)
+        for j in 1:i
+            ij = ind_ij(i, j)
+            print("[$ij]=$(mle.comp.d2S1[ij]), ")
+        end
+    end
+    print("\n")
+    print("jl: d2S2:")
+    for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance -1)
+        for j in 1:i
+            ij = ind_ij(i, j)
+            print("[$ij]=$(mle.comp.d2S2[ij]), ")
+        end
+    end
+    print("\n")
+    print("jl: d2S3:")
+    for i in 1:(mle.model.nb_params_maintenance)
+        for j in 1:i
+            ij = ind_ij(i, j)
+            print("[$ij]=$(mle.comp.d2S3[ij]), ")
+        end
+    end
+    print("\n")
+    print("nb param: family=$(mle.model.nb_params_family), maintenance=$(mle.model.nb_params_maintenance), cov=$(mle.model.nb_params_cov)\n")
+    end
     
-
     # LD: compute hessian
     θ[1] = profile ? mle.comp.S0 / mle.comp.S1 : α
 
@@ -473,7 +475,7 @@ function hessian(mle::MLE, θ::Vector{Float64}; profile::Bool=true)::Matrix{Floa
                 res[i + np,j + 1] += mle.comp.d2S2[ij] - θ[1] * mle.comp.d2S1[ij]
                 res[j + 1,i + np] = res[i + np,j + 1]
             end
-            for j in 1:mle.model.nb_params_maintenance
+            for j in 1:i #Warning: j<=i
                 ij = ind_ij(i + np - 1,j + np - 1)
                 ij_2 = ind_ij(i ,j)
                 res[i + np,j + np] += mle.comp.d2S2[ij] - θ[1] * mle.comp.d2S1[ij] + mle.comp.d2S3[ij_2]
@@ -489,7 +491,7 @@ function hessian(mle::MLE, θ::Vector{Float64}; profile::Bool=true)::Matrix{Floa
                 res[i + np,j + 1] += - θ[1] * mle.comp.d2S1[ij]
                 res[j + 1,i + np] = res[i + np,j + 1]
             end
-            for j in 1:mle.model.nb_params_cov
+            for j in 1:i #Warning: j<=i
                 ij = ind_ij(i + np - 1,j + np - 1)
                 ij_2 = ind_ij(i ,j)
                 res[i + np,j + np] += - θ[1] * mle.comp.d2S1[ij] + mle.comp.d2S4[ij_2]
