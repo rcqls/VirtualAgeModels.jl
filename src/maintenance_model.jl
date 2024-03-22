@@ -762,7 +762,7 @@ function update!(m::QR, model::AbstractModel;gradient::Bool=false,hessian::Bool=
             jj = ind_ij(model.id_params, j)
             model.d2A[jj] = model.d2A[jj] + model.dA[j]
         end
-        for i in (model.id_params + 1):npm
+        for i in model.id_params:npm#LD: (model.id_params + 1):npm
             #//id and i(>=model.id_params) respectively correspond to the line and column indices of (inferior diagonal part of) the hessian matrice
             ii = ind_ij(i, model.id_params)
             model.d2A[ii] = model.d2A[ii] + model.dA[i]
@@ -807,10 +807,12 @@ function update!(m::GQR, model::AbstractModel;gradient::Bool=false,hessian::Bool
                 end
             end
         end
-        for j in 1:model.id_params
-            #//i(<=model.id_params) and id respectively correspond to the column and line indices of (inferior diagonal part of) the hessian matrice
-            jj = ind_ij(model.id_params, j)
-            model.d2A[jj] = model.d2A[jj] + m.ρ^δ * δ/m.ρ * model.dA[j]
+        if model.id_params>1 #LD
+            for j in 1:(model.id_params-1) #LD: 1:model.id_params
+                #//i(<=model.id_params) and id respectively correspond to the column and line indices of (inferior diagonal part of) the hessian matrice
+                jj = ind_ij(model.id_params, j)
+                model.d2A[jj] = model.d2A[jj] + m.ρ^δ * δ/m.ρ * model.dA[j]
+            end
         end
         model.d2A[ind_ij(model.id_params, model.id_params)] += m.ρ^δ * δ/m.ρ * (2 * model.dA[model.id_params] + (δ - 1)/m.ρ * model.A)
         for i in (model.id_params+1):npm
@@ -868,13 +870,13 @@ function update!(m::GQR_ARA1, model::AbstractModel;gradient::Bool=false,hessian:
                     model.d2Vright[ij] += prov
                 end
             end
-            for j in 1:model.id_params
+            for j in 1:(model.id_params+1) #LD: 1:model.id_params
                 prov = model.dA[j] * model.Δt
                 jj = ind_ij(model.id_params + 1, j)
                 model.d2VR_prec[jj] -= prov
                 model.d2Vright[jj] -= prov
             end
-            for i in (model.id_params + 2):npm
+            for i in (model.id_params + 1):npm #LD: (model.id_params + 2):npm
                 ii = ind_ij(i, model.id_params + 1)
                 prov = model.dA[i] * model.Δt
                 model.d2VR_prec[ii] -= prov
@@ -887,7 +889,7 @@ function update!(m::GQR_ARA1, model::AbstractModel;gradient::Bool=false,hessian:
                     model.d2Vright[ij] += (1 - m.ρARA) * model.d2A[ij] * model.Δt
                 end
             end
-            for j in 1:model.id_params
+            for j in 1:(model.id_params+1) #LD: 1:model.id_params
                 jj = ind_ij(model.id_params + 1, j)
                 model.d2Vright[jj] -= model.dA[j] * model.Δt
             end
@@ -903,10 +905,12 @@ function update!(m::GQR_ARA1, model::AbstractModel;gradient::Bool=false,hessian:
                 model.d2A[ij] = m.ρQR^δ * model.d2A[ij]
             end
         end
-        for j in 1:model.id_params
-            #//i(<=model.id_params) and id respectively correspond to the column and line indices of (inferior diagonal part of) the hessian matrice
-            jj = ind_ij(model.id_params, j)
-            model.d2A[jj] += m.ρQR^δ * δ / m.ρQR * model.dA[j]
+        if model.id_params>1#LD
+            for j in 1:(model.id_params-1)
+                #//i(<=model.id_params) and id respectively correspond to the column and line indices of (inferior diagonal part of) the hessian matrice
+                jj = ind_ij(model.id_params, j)
+                model.d2A[jj] += m.ρQR^δ * δ / m.ρQR * model.dA[j]
+            end
         end
         model.d2A[ind_ij(model.id_params, model.id_params)] += m.ρQR^δ * δ / m.ρQR * (2 * model.dA[model.id_params] + (δ - 1) / m.ρQR * model.A)
         for i in (model.id_params+1):npm
@@ -980,10 +984,10 @@ function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessia
                     end
                 end
             end
-            for j in 1:model.id_params
+            for j in 1:(model.id_params+1) #LD: 1:model.id_params
                 model.d2VR_prec[k * npm2 + ind_ij(model.id_params+1, j)] -= model.dVR_prec[(k-1) * npm + j]
             end
-            for i in (model.id_params + 2):npm
+            for i in (model.id_params + 1):npm#LD: (model.id_params + 2):npm
                 model.d2VR_prec[k * npm2 + ind_ij(i, model.id_params+1)] -= model.dVR_prec[(k-1) * npm + i]
             end
         end
@@ -995,7 +999,7 @@ function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessia
                     model.d2Vright[ij] = (1 - m.ρARA) * model.d2Vleft[ij]
                 end
             end
-            for j in 1:model.id_params
+            for j in 1:(model.id_params+1) #LD: 1:model.id_params
                 jj = ind_ij(model.id_params + 1, j)
                 model.d2VR_prec[jj] -= model.dA[j] * model.Δt
                 model.d2Vright[jj] -= model.dVleft[j]
@@ -1012,11 +1016,11 @@ function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessia
                     model.d2Vright[ij] = (1-m.ρARA) * model.d2Vleft[ij]
                 end
             end
-            for j in 1:model.id_params
+            for j in  1:(model.id_params+1) #LD: 1:model.id_params
                 jj = ind_ij(model.id_params + 1, j)
                 model.d2Vright[jj] -= model.dVleft[j]
             end
-            for i in (model.id_params+1):(model.nb_params_maintenance - 1)
+            for i in (model.id_params+1):(model.nb_params_maintenance)#LD: (model.id_params+1):(model.nb_params_maintenance - 1)
                 ii = ind_ij(i, model.id_params + 1)
                 model.d2Vright[ii] -= model.dVleft[i]
             end
@@ -1028,10 +1032,12 @@ function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessia
                 model.d2A[ij] = m.ρQR^δ * model.d2A[ij]
             end
         end
-        for j in 1:model.id_params
-            #//i(<=model.id_params) and id respectively correspond to the column and line indices of (inferior diagonal part of) the hessian matrice
-            jj = ind_ij(model.id_params, j)
-            model.d2A[jj] += m.ρQR^δ * δ / m.ρQR * model.dA[j]
+        if model.id_params>1 #LD
+            for j in 1:(model.id_params-1) #LD: 1:model.id_params
+                #//i(<=model.id_params) and id respectively correspond to the column and line indices of (inferior diagonal part of) the hessian matrice
+                jj = ind_ij(model.id_params, j)
+                model.d2A[jj] += m.ρQR^δ * δ / m.ρQR * model.dA[j]
+            end
         end
         model.d2A[ind_ij(model.id_params, model.id_params)] += m.ρQR^δ * δ / m.ρQR * (2 * model.dA[model.id_params] + (δ - 1) /m.ρQR * model.A)
         for i in (model.id_params+1):npm

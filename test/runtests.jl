@@ -175,12 +175,12 @@ insert!(modtest,
         :θ => [0.03,2.4,0.7,-1.2],
         :data => DataFrame(Time=[18.09,52.07,95.71,145.75],Type=[-1,-1,-1,-1]),
         :vam => @vam(Time & Type ~ (GQR_ARA∞(0.7,-1.2|log) | Weibull(0.001,2.5))) 
-    ) #,
-    # :W_GQRARAm3Log => Dict(
-    #     :θ => [0.03,2.4,1.3,0.7],
-    #     :data => DataFrame(Time=[18.09,52.07,95.71,145.75,198.7,220.9,230],Type=[-1,-1,-1,-1,-1,-1,0]),
-    #     :vam => @vam(Time & Type ~ (GQR_ARAm(1.2,0.5|3) | Weibull(0.001,2.5))) 
-    # )
+    ) 
+    :W_GQRARAm3Log => Dict(
+         :θ => [0.03,2.4,1.3,0.7],
+         :data => DataFrame(Time=[18.09,52.07,95.71,145.75,198.7,220.9,230],Type=[-1,-1,-1,-1,-1,-1,0]),
+         :vam => @vam(Time & Type ~ (GQR_ARAm(1.2,0.5|3) | Weibull(0.001,2.5))) 
+     )
 )
 
 # insert!(modtest,
