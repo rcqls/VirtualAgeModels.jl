@@ -1,5 +1,6 @@
 using VirtualAgeModels
 using DataFrames
+using RCall
 
 function testLD()
 
@@ -71,6 +72,8 @@ contrast(m,θ)
 gradient(m, θ)
 hessian(m, θ)
 maximum(testLD())
+
+
 
 df = DataFrame(time=[3.36,4.04,4.97,5.16], type=[-1,-1,-1,-1])
 m = @vam Time & Type ~ (ARAInf(0.4) | Weibull(0.001,2.5)) data = df
@@ -321,5 +324,57 @@ d2C = [
 contrast(m,θ)
 gradient(m, θ)
 hessian(m, θ)
+testLD()
+maximum(testLD())
+
+df =  DataFrame(
+	System=vcat(repeat(1:2,inner=4),repeat([3],14)),
+	Time=[3.36,4.04,4.97,5.16, 0.78,2.36,4.05,4.97, 2.45,2.78,3.56,4.23,5.32,6.43,6.98,7.51,8.02,9.43,10.2,11.5,12,13.78],
+	Type=[1,1,-1,1, -1,1,1,0, 1,-1,1,-1,-1,1,1,1,-1,1,-1,1,-1,0]
+)
+m = @vam System & Time & Type ~ (ARAInf(0.3) | Weibull(0.001,2.5)) & (ARAm(0.6|3)) data=df
+m2 = @vam System & Time & Type ~ (ARAm(0.3|22) | Weibull(0.001,2.5)) & (ARAm(0.6|3)) data=df
+θ =  [0.03,2.4,0.3,0.7]
+contrast(m, θ, profile=false)-contrast(m2, θ, profile=false)
+gradient(m, θ, profile=false)-gradient(m2, θ, profile=false)
+hessian(m, θ, profile=false)-hessian(m2, θ, profile=false)
+contrast(m,θ)-contrast(m2,θ)
+gradient(m, θ)-gradient(m2, θ)
+hessian(m, θ)-hessian(m2, θ)
+
+
+df =  DataFrame(
+	System=vcat(repeat(1:2,inner=4),repeat([3],14)),
+	Time=[3.36,4.04,4.97,5.16, 0.78,2.36,4.05,4.97, 2.45,2.78,3.56,4.23,5.32,6.43,6.98,7.51,8.02,9.43,10.2,11.5,12,13.78],
+	Type=[1,1,1,1, -1,1,1,0, 1,-1,1,-1,-1,1,1,1,-1,1,-1,1,-1,0]
+)
+m = @vam System & Time & Type ~ (GQR(1.) | Weibull(0.001,2.5)) & (GQR_ARAm(0.9,0.6|3,log)) data=df
+θ =  [0.03,2.4,1.1,0.9,0.7]
+R"""
+	require(VAM)
+	dataDF <- data.frame(System=c(rep(1,4),rep(2,4),rep(3,14)),Time=c(3.36,4.04,4.97,5.16, 0.78,2.36,4.05,4.97, 2.45,2.78,3.56,4.23,5.32,6.43,6.98,7.51,8.02,9.43,10.2,11.5,12,13.78),Type=c(1,1,1,1, -1,1,1,0, 1,-1,1,-1,-1,1,1,1,-1,1,-1,1,-1,0),row.names=1:22)
+    theta<-c(0.03,2.4,1.1,0.9,0.7)
+	mle <- mle.vam(System & Time & Type ~ (GQR(1.) | Weibull(0.001,2.5)) & (GQR_ARAm(0.9,0.6|3,log)),data=dataDF)
+	res <- list()
+	res$lnL <- logLik(mle,theta,TRUE,FALSE,FALSE)
+	res$dlnL<- logLik(mle,theta,FALSE,TRUE,FALSE)
+	res$d2lnL <- logLik(mle,theta,FALSE,FALSE,TRUE)
+	res$C <- contrast(mle,theta,TRUE,FALSE,FALSE)
+	res$dC <- contrast(mle,theta,FALSE,TRUE,FALSE)
+	res$d2C <- contrast(mle,theta,FALSE,FALSE,TRUE)
+	"""
+	res = @rget res
+lnL = res[:lnL]
+dlnL = res[:dlnL]
+d2lnL = res[:d2lnL]
+contrast(m, θ, profile=false)-lnL
+gradient(m, θ, profile=false)-dlnL
+hessian(m, θ, profile=false)-d2lnL
+C = res[:C]
+dC = res[:dC]
+d2C = res[:d2C]
+contrast(m,θ)-C
+gradient(m, θ)[2:end]-dC
+hessian(m, θ)[2:end,2:end]-d2C
 testLD()
 maximum(testLD())

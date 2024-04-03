@@ -89,7 +89,7 @@ function init!(m::Model)
 			cur_id_params += nbparams(mm)
 		end
 		m.nb_params_family = nbparams(m.family)
-		m.mu = max_memory(m)
+		m.mu = max_memory(m)-1#LD: max_memory(m)
 
 		if m.nb_data < 0 # first data init
 			m.data = DataFrame[]

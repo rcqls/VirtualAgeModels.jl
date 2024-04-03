@@ -1,8 +1,13 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.3"
+julia_version = "1.10.2"
 manifest_format = "2.0"
-project_hash = "9bc66c6fadb5dab55e40f8d53ced1e3ac2a76319"
+project_hash = "ebecf6ddb140da21660cf86aff27e92e314b3d0f"
+
+[[deps.AbstractTrees]]
+git-tree-sha1 = "2d9c9a55f9c93e8887ad391fbae72f8ef55e1177"
+uuid = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
+version = "0.4.5"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
