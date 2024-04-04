@@ -29,6 +29,22 @@ function insert!(modtest::ModelTest, models::Vararg{Pair{Symbol, ModelDict}})
 	end
 end
 
+function Tab1ToFloat(res::Vector{Float64})
+	if size(res)[1]==1
+		return res[1]
+	else
+		return res
+	end
+end
+
+function Tab1ToFloat(res::Matrix{Float64})
+	if size(res)[1]==1
+		return res[1,1]
+	else
+		return res
+	end
+end
+
 function update!(modtest::ModelTest, key::Symbol)
 	model = modtest.models[key]
 	# println("update")
@@ -64,8 +80,8 @@ function update!(modtest::ModelTest, key::Symbol)
 		:dlnL => gradient(m, θ, profile=false),
 		:d2lnL => hessian(m, θ, profile=false),
 		:C => contrast(m, θ),
-		:dC => gradient(m, θ)[2:end],
-		:d2C => hessian(m, θ)[2:end,2:end]
+		:dC => Tab1ToFloat(gradient(m, θ)[2:end]),
+		:d2C => Tab1ToFloat(hessian(m, θ)[2:end,2:end])
 	)
 	modtest.results[key]=result
 end

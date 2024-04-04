@@ -278,6 +278,28 @@ function gradient(mle::MLE, θ::Vector{Float64}; profile::Bool=true)::Vector{Flo
             gradient_current(mle)
         end
     end
+
+        #verif dSommes
+        if false
+            print("jl: dS1:")
+            for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance + mle.model.nb_params_cov -1)
+                print("[$i]=$(mle.comp.dS1[i]), ")
+            end
+            print("\n")
+            print("jl: dS2:")
+            for i in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance -1)
+                print("[$i]=$(mle.comp.dS2[i]), ")
+            end
+            print("\n")
+            print("jl: d23:")
+            for i in 1:(mle.model.nb_params_maintenance)
+                print("[$i]=$(mle.comp.dS3[i]), ")
+            end
+            print("\n")
+            print("nb param: family=$(mle.model.nb_params_family), maintenance=$(mle.model.nb_params_maintenance), cov=$(mle.model.nb_params_cov)\n")
+            end
+
+
     # compute gradient
     θ[1] = profile ? mle.comp.S0 / mle.comp.S1 : α
 
