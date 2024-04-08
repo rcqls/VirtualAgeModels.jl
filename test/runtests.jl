@@ -351,10 +351,7 @@ insert!(modtest,
         :θ => [0.03,2.4,0.7],
         :data => DataFrame(System=[1,1,1,1,2,2,2,3],Time=[18.09,52.07,95.71,145.75,15.02,45.1,82,20.1],Type=[-1,-1,-1,0,-1,-1,-1,-1]),
         :vam => @vam(System & Time & Type ~ (GQR(0.7) | Weibull(0.001,2.5))) 
-    )
-)
-
-insert!(modtest,
+    ),
     :W_ARA∞_AGAP_QR_MS => Dict(
         :θ => [0.3,1.8,0.3,0.7],
         :data => DataFrame(System=vcat(repeat(1:2,inner=4),repeat([3],14)),Time=[3.36,4.04,4.97,5.16, 0.78,2.36,4.05,4.97, 2.45,2.78,3.56,4.23,5.32,6.43,6.98,7.51,8.02,9.43,10.2,11.5,12,13.78],Type=[1,2,2,1, -1,2,2,0, 1,-1,1,-1,-1,2,1,2,-1,1,2,2,1,0]),
@@ -485,6 +482,17 @@ insert!(modtest,
         :data => DataFrame(System=vcat(repeat(1:2,inner=4),repeat([3],15)),Time=[3.36,4.04,4.97,5.16, 0.78,2.36,4.05,4.97, 2.45,2.78,3.56,4.23,5.32,6.43,6.98,7.51,8.02,9.43,10.2,11.5,12,13.78,15.2],Type=[1,1,-1,1, -1,1,1,0, 1,-1,1,-1,-1,1,1,1,-1,2,1,-1,1,-1,0]),
         :vam => @vam(System & Time & Type ~ (GQR(0.8|sqrt) | Weibull(0.001,2.5)) & (GQR_ARAm(1.2,0.9|2,log) + AGAN())) 
     ),
+    #####
+    #LD: PB!!! avec la fonction de test
+    # lors du parsing en julia le * devand les covariables de la formule est enlevé
+    # mais pour le R il faut impérativement le *
+    #####
+    #:W_ARA∞_2cov => Dict(
+    #    :θ => [0.15,2.3,0.8,0.6,-0.9],
+    #    :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),repeat([3],1),repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=repeat([-1],15)),
+    #    :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[0,0,0,1]),
+    #    :vam => @vam(System & Time & Type ~ (ARAInf(0.8) | Weibull(0.15,2.3 | 0.6 * cov1 + -0.9 * cov2))) 
+    #),
 )
 
 # insert!(modtest,
@@ -502,13 +510,13 @@ insert!(modtest,
 
 
 # key = :W_ARA∞_QAGAN_QR_MS
-key = :W_GQRLog
-key = :W_GQRSqrt
+#key = :W_GQRLog
+#key = :W_GQRSqrt
 # key = :W_ARAm2
 # key = :W_ARAm3 
 # key = :W_ARAm4
 # key = :W_ARAm2_ARAm4_MS
-key = :W_GQRARA1Log
+#key = :W_GQRARA1Log
 # key = :W_GQRARAm3Log
 
 
@@ -519,25 +527,25 @@ key = :W_GQRARA1Log
 # modtest.results[key][:r]
 # modtest.results[key][:jl]
 
-update!(modtest, :W_ARA∞_MS)
-test(modtest, :W_ARA∞_MS)
-update!(modtest, :W_ARAm1)
-test(modtest, :W_ARAm1)
-update!(modtest, :W_ARAm1_vs_ARA1)
-test(modtest, :W_ARAm1_vs_ARA1)
-modtest.results[:W_ARAm1][:r]
-modtest.results[:W_ARAm1][:jl]
-modtest.results[:W_ARAm1_vs_ARA1][:r]
-modtest.results[:W_ARAm1_vs_ARA1][:jl]
+#update!(modtest, :W_ARA∞_MS)
+#test(modtest, :W_ARA∞_MS)
+#update!(modtest, :W_ARAm1)
+#test(modtest, :W_ARAm1)
+#update!(modtest, :W_ARAm1_vs_ARA1)
+#test(modtest, :W_ARAm1_vs_ARA1)
+#modtest.results[:W_ARAm1][:r]
+#modtest.results[:W_ARAm1][:jl]
+#modtest.results[:W_ARAm1_vs_ARA1][:r]
+#modtest.results[:W_ARAm1_vs_ARA1][:jl]
 
-update!(modtest, :W_ARAm∞)
-test(modtest, :W_ARAm∞)
-update!(modtest, :W_ARAm∞_vs_ARA∞)
-test(modtest, :W_ARAm∞_vs_ARA∞)
-modtest.results[:W_ARAm∞][:r]
-modtest.results[:W_ARAm∞][:jl]
-modtest.results[:W_ARAm∞_vs_ARA∞][:r]
-modtest.results[:W_ARAm∞_vs_ARA∞][:jl]
+#update!(modtest, :W_ARAm∞)
+#test(modtest, :W_ARAm∞)
+#update!(modtest, :W_ARAm∞_vs_ARA∞)
+#test(modtest, :W_ARAm∞_vs_ARA∞)
+#modtest.results[:W_ARAm∞][:r]
+#modtest.results[:W_ARAm∞][:jl]
+#modtest.results[:W_ARAm∞_vs_ARA∞][:r]
+#modtest.results[:W_ARAm∞_vs_ARA∞][:jl]
 
 #empty!(modtest)
 

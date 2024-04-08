@@ -354,7 +354,8 @@ function gradient_current(mle::MLE)
         gradient_update_dS_maintenance(mle, i + np,i)
     end
     if mle.model.nb_params_cov > 1
-        np += mle.model.nb_params_cov
+        np += mle.model.nb_params_maintenance #LD: mle.model.nb_params_cov
+        println("np=$np; mle.model.nb_params_cov=$(mle.model.nb_params_cov)")
         for i in 1:mle.model.nb_params_cov
             gradient_update_dS_covariate(mle, i + np, i)
         end
@@ -507,19 +508,28 @@ function hessian(mle::MLE, θ::Vector{Float64}; profile::Bool=true)::Matrix{Floa
     end
     np += mle.model.nb_params_maintenance
     if mle.model.nb_params_cov > 0
-        for i in 1:mle.model.nb_params_cov
-            for j in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance - 1)
-                ij = ind_ij(i + np - 1, j)
-                res[i + np,j + 1] += - θ[1] * mle.comp.d2S1[ij]
-                res[j + 1,i + np] = res[i + np,j + 1]
-            end
-            for j in 1:i #Warning: j<=i
-                ij = ind_ij(i + np - 1,j + np - 1)
-                ij_2 = ind_ij(i ,j)
-                res[i + np,j + np] += - θ[1] * mle.comp.d2S1[ij] + mle.comp.d2S4[ij_2]
-                res[j + np,i + np] = res[i + np,j + np]
+        #LD: second order derivatives for S4 are null !
+        #consequently only the ssecond order of S1 contributes to the second order derivatives of the likelihood
+        for i in (np + 1):(np + mle.model.nb_params_cov)
+            for j in 1:(i - 1) #Warning: j<=i and S1 does not depend on alpha
+                ij = ind_ij(i - 1, j)
+                res[i ,j + 1] += - θ[1] * mle.comp.d2S1[ij]
+                res[j+1 ,i] = res[i ,j + 1]
             end
         end
+        #for i in 1:mle.model.nb_params_cov
+        #    for j in 1:(mle.model.nb_params_family + mle.model.nb_params_maintenance - 1)
+        #        ij = ind_ij(i + np - 1, j)
+        #        res[i + np,j + 1] += - θ[1] * mle.comp.d2S1[ij]
+        #        res[j + 1,i + np] = res[i + np,j + 1]
+        #    end
+        #    for j in 1:i #Warning: j<=i
+        #        ij = ind_ij(i + np - 1,j + np - 1)
+        #        ij_2 = ind_ij(i ,j)
+        #        res[i + np,j + np] += - θ[1] * mle.comp.d2S1[ij] + mle.comp.d2S4[ij_2]
+        #        res[j + np,i + np] = res[i + np,j + np]
+        #    end
+        #end
     end
 # End LD
 
@@ -668,17 +678,17 @@ function hessian_current(mle::MLE)
            mle.comp.d2S2[ij] += mle.model.comp.d2S2[ij]
         end
     end
-    np += npc
+    np += npm #LD: npc
     if npc > 0
         for i in 1:npc
             gradient_update_dS_covariate(mle, i + np, i)
-            for j in 1:(npf + npm)
+            for j in 1:np
                 ij = ind_ij(i + np, j)
-            #TODO DEBUG: mle.comp.d2S1[ij] += covariate(mle.model, i) * exp(mle.model.sum_cov) * mle.model.comp.dS1[j]
+                mle.comp.d2S1[ij] += covariate(mle.model, i) * exp(mle.model.sum_cov) * mle.model.comp.dS1[j]
             end
-            for j in (npf + npm + 1):i
+            for j in (np + 1):(np+i)#LD:i
                 ij = ind_ij(i + np, j)
-            #TODO DEBUG: mle.comp.d2S1[ij] += covariate(mle.model, i) * covariate(mle.model, j - npf - npm) * exp(mle.model.sum_cov) * mle.model.comp.S1
+                mle.comp.d2S1[ij] += covariate(mle.model, i) * covariate(mle.model, j - np) * exp(mle.model.sum_cov) * mle.model.comp.S1
             end
         end
     end
