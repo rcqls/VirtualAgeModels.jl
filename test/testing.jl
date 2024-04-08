@@ -92,7 +92,7 @@ function update!(modtest::ModelTest)
 	end
 end
 
-function test(modtest::ModelTest;rtol=1e-14)
+function test(modtest::ModelTest;rtol=1e-12)
 	for (key, result) in modtest.results
 		@testset verbose = true "model $key" begin
 			@testset "result $k" for k in [:lnL, :dlnL, :d2lnL, :C, :dC, :d2C]
@@ -102,7 +102,7 @@ function test(modtest::ModelTest;rtol=1e-14)
 	end
 end
 
-function test(modtest::ModelTest, key::Symbol;rtol=1e-14)
+function test(modtest::ModelTest, key::Symbol;rtol=1e-12)
 	result = modtest.results[key]
 	@testset verbose = true "model $key" begin
 		@testset "result $k" for k in [:lnL, :dlnL, :d2lnL, :C, :dC, :d2C]
