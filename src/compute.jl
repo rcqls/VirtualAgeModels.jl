@@ -13,7 +13,7 @@ mutable struct Compute
     d2S1::Vector{Float64}
     d2S2::Vector{Float64}
     d2S3::Vector{Float64}
-    d2S4::Vector{Float64}
+    #d2S4::Vector{Float64}#LD: second order derivatives of S4 are null !
     # dims
     nbm::Int #number of maintenance params
     nb2m::Int #maintenance params for deriv order 2
@@ -51,7 +51,7 @@ function init!(c::Compute; deriv::Bool = false)
         c.d2S1, c.d2S2, c.d2S3=zeros(c.nb2d), zeros(c.nb2d_ssm), zeros(c.nb2m)
         if c.nbc > 0
             c.dS4 = zeros(c.nbc)
-            c.d2S4 = zeros(c.nb2c)
+            #c.d2S4 = zeros(c.nb2c)
         end
     end
 end

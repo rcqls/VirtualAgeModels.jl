@@ -378,3 +378,36 @@ gradient(m, θ)[2:end]-dC
 hessian(m, θ)[2:end,2:end]-d2C
 testLD()
 maximum(testLD())
+
+
+df = DataFrame(System=[1,1,1,1,2,2,2,3],Time=[3.36,4.04,4.97,5.16,2.34,3.46,5.02,4],Type=[-1,-1,-1,0,-1,-1,-1,0])
+m = @vam System & Time & Type ~ (ARAInf(0.4) | Weibull(0.001,2.5)) data = df
+θ = [0.3,0.8,0.6]
+R"""
+	require(VAM)
+	dataDF <- data.frame(System=c(1,1,1,1,2,2,2,3),Time=c(3.36,4.04,4.97,5.16,2.34,3.46,5.02,4),Type=c(-1,-1,-1,0,-1,-1,-1,0))
+    theta<-c(0.3,0.8,0.6)
+	mle <- mle.vam(System & Time & Type ~ (ARAInf(0.4) | Weibull(0.001,2.5)),data=dataDF)
+	res <- list()
+	res$lnL <- logLik(mle,theta,TRUE,FALSE,FALSE)
+	res$dlnL<- logLik(mle,theta,FALSE,TRUE,FALSE)
+	res$d2lnL <- logLik(mle,theta,FALSE,FALSE,TRUE)
+	res$C <- contrast(mle,theta,TRUE,FALSE,FALSE)
+	res$dC <- contrast(mle,theta,FALSE,TRUE,FALSE)
+	res$d2C <- contrast(mle,theta,FALSE,FALSE,TRUE)
+	"""
+	res = @rget res
+lnL = res[:lnL]
+dlnL = res[:dlnL]
+d2lnL = res[:d2lnL]
+(contrast(m, θ, profile=false)-lnL)/lnL
+maximum(abs.((gradient(m, θ, profile=false)-dlnL)/dlnL))<0.00001
+(hessian(m, θ, profile=false)-d2lnL)/d2lnL
+C = res[:C]
+dC = res[:dC]
+d2C = res[:d2C]
+(contrast(m,θ)-C)/C
+(gradient(m, θ)[2:end]-dC)/dC
+(hessian(m, θ)[2:end,2:end]-d2C)/d2C
+
+
