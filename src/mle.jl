@@ -353,9 +353,8 @@ function gradient_current(mle::MLE)
     for i in 1:mle.model.nb_params_maintenance
         gradient_update_dS_maintenance(mle, i + np,i)
     end
-    if mle.model.nb_params_cov > 1
+    if mle.model.nb_params_cov >= 1 #LD: > 1
         np += mle.model.nb_params_maintenance #LD: mle.model.nb_params_cov
-        println("np=$np; mle.model.nb_params_cov=$(mle.model.nb_params_cov)")
         for i in 1:mle.model.nb_params_cov
             gradient_update_dS_covariate(mle, i + np, i)
         end

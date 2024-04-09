@@ -482,17 +482,48 @@ insert!(modtest,
         :data => DataFrame(System=vcat(repeat(1:2,inner=4),repeat([3],15)),Time=[3.36,4.04,4.97,5.16, 0.78,2.36,4.05,4.97, 2.45,2.78,3.56,4.23,5.32,6.43,6.98,7.51,8.02,9.43,10.2,11.5,12,13.78,15.2],Type=[1,1,-1,1, -1,1,1,0, 1,-1,1,-1,-1,1,1,1,-1,2,1,-1,1,-1,0]),
         :vam => @vam(System & Time & Type ~ (GQR(0.8|sqrt) | Weibull(0.001,2.5)) & (GQR_ARAm(1.2,0.9|2,log) + AGAN())) 
     ),
-    #####
-    #LD: PB!!! avec la fonction de test
-    # lors du parsing en julia le * devand les covariables de la formule est enlevé
-    # mais pour le R il faut impérativement le *
-    #####
-    #:W_ARA∞_2cov => Dict(
-    #    :θ => [0.15,2.3,0.8,0.6,-0.9],
-    #    :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),repeat([3],1),repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=repeat([-1],15)),
-    #    :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[0,0,0,1]),
-    #    :vam => @vam(System & Time & Type ~ (ARAInf(0.8) | Weibull(0.15,2.3 | 0.6 * cov1 + -0.9 * cov2))) 
-    #),
+    :W_ARA∞_2cov => Dict(
+        :θ => [0.15,2.3,0.8,0.6,-0.9],
+        :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),repeat([3],1),repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=repeat([-1],15)),
+        :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[0,0,0,1]),
+        :vam => @vam(System & Time & Type ~ (ARAInf(0.8) | Weibull(0.15,2.3 | 0.6 * cov1 + -0.9 * cov2))),
+        :rform => "System & Time & Type ~ (ARAInf(0.8) | Weibull(0.15,2.3 | 0.6 * cov1 - 0.9 * cov2))"
+    ),
+    :W_ARA1_1cov => Dict(
+        :θ => [0.15,2.3,0.8,0.6],
+        :data => DataFrame(System=repeat([1],5),Time=[0.800,2.646,3.190,3.916,4.109],Type=repeat([-1],5)),
+        :datacov => DataFrame(cov1=[4.336]),
+        :vam => @vam(System & Time & Type ~ (ARA1(0.8) | Weibull(0.15,2.3 | 0.6 * cov1))),
+        :rform => "System & Time & Type ~ (ARA1(0.8) | Weibull(0.15,2.3 | 0.6 * cov1))"
+    ),
+    :L_GQRARAm3_log_1cov => Dict(
+        :θ => [10,0.8,0.9,0.6,0.05],
+        :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),repeat([3],1),repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=repeat([-1],15)),
+        :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655]),
+        :vam => @vam(System&Time&Type~(GQR_ARAm(0.9,0.6|3,log)|LogLinear(0.01,0.8|0.6*cov1))),
+        :rform => "System&Time&Type~(GQR_ARAm(0.9,0.6|3,log)|LogLinear(0.01,0.8|0.6*cov1))"
+    ),
+    :W_GQRARAm3_AGAN_2cov => Dict(
+        :θ => [0.1,2.5,0.9,0.3,0.6,-0.9],
+        :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),repeat([3],1),repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=[1,-1,1,1,0, -1,-1,1,-1, 0, 1,-1,-1,1,1]),
+        :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[1,0,0,1]),
+        :vam => @vam(System&Time&Type~(GQR_ARAm(0.9,0.6|3,log)|Weibull(0.1,2.1|0.6*cov1+0.7*cov2))&(AGAN())),
+        :rform => "System&Time&Type~(GQR_ARAm(0.9,0.6|3,log)|Weibull(0.1,2.1|0.6*cov1+0.7*cov2))&(AGAN())"
+    ),
+    :W_ABAO_AGAN_2cov => Dict(
+        :θ => [0.1,2.5,0.6,-0.9],
+        :data => DataFrame(System=vcat(repeat([1],5),repeat([2],4),repeat([3],1),repeat([4],5)),Time=[0.800,2.646,3.190,3.916,4.109,0.910,1.127,1.245, 1.349, 0.541,1.397,1.463,2.406,2.506,3.159],Type=[1,-1,1,1,0, -1,-1,1,-1, 0, 1,-1,-1,1,1]),
+        :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[1,0,0,1]),
+        :vam => @vam(System&Time&Type~(ABAO()|Weibull(0.1,2.1|0.6*cov1+0.7*cov2))&(AGAN())),
+        :rform => "System&Time&Type~(ABAO()|Weibull(0.1,2.1|0.6*cov1+0.7*cov2))&(AGAN())"
+    ),
+    :W_GQRARAm_ARA1_GQRARAm_2cov => Dict(
+        :θ => [0.11,2.5,1.15,0.62,0.92,1.25,0.75,0.65,-0.56],
+        :data => DataFrame(System=vcat(repeat([1],10),repeat([2],8),repeat([3],9),repeat([4],10)),Time=[0.79,1.583,1.761,2,2.652,2.705,3.445,4,4.57,4.901,0.069,0.477,0.682,1.004,1.327,1.704,1.83,1.848,0.735,1.004,1.408,1.874,2,2.466,2.514,2.919,3.376,1.02,1.401,2,2.216,2.752,3.426,3.592,4,4.35,4.82],Type=[-1,-1,-1,2,1,-1,1,2,-1,-1,-1,-1,-1,-1,1,-1,-1,-1,1,-1,-1,1,2,-1,-1,1,1,-1,-1,2,-1,1,1,-1,2,-1,1]),
+        :datacov => DataFrame(cov1=[4.336,5.615,4.770,4.655],cov2=[1,0,0,1]),
+        :vam => @vam(System&Time&Type~(GQR_ARAm(1.1,0.6|3,sqrt)|Weibull(0.1,2.1|0.6*cov1+(-0.7)*cov2))&(ARA1(0.9)+GQR_ARAm(1.3,0.8|2,log))),
+        :rform => "System&Time&Type~(GQR_ARAm(1.1,0.6|3,sqrt)|Weibull(0.1,2.1|0.6*cov1+(-0.7)*cov2))&(ARA1(0.9)+GQR_ARAm(1.3,0.8|2,log))"
+    ),
 )
 
 # insert!(modtest,
