@@ -101,8 +101,7 @@ function MLE(model::Model, data::DataFrame, datacov::DataFrame)::MLE
     mle.model = model
     init!(mle.model)
 
-    ## only if not already set!
-    if mle.model.nb_data < 0
+    if !isempty(data)
         data!(mle.model, data, datacov)
     end
     mle.comp = Compute(mle.model)
