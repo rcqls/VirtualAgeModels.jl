@@ -1,7 +1,7 @@
 import VirtualAgeModels as VAM
 using Distributions
 
-vam = @vam(time & type ~ (ARAInf(0.4) | Weibull(0.001,2.5)))
+vam = VAM.@vam(time & type ~ (ARAInf(0.4) | Weibull(0.001,2.5)))
 # VAM.init!(vam)
 
 ## TODO
@@ -71,3 +71,4 @@ res[1]
 res[2]
 
 VAM.parse_covariates(:(Weibull(0.15,2.3|0.6*cov1-0.9*cov2)))
+
