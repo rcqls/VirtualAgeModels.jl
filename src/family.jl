@@ -41,6 +41,8 @@ function WeibullFamilyModel(α::Parameter, β::Parameter)
     init!(fm.comp, fm)
     return fm
 end
+WeibullFamilyModel(α::Real, β::Real) = WeibullFamilyModel(convert(Parameter,α), convert(Parameter,β))
+
 params(fm::WeibullFamilyModel)::Parameters = [fm.α,fm.β]
 params!(fm::WeibullFamilyModel, p::Parameters) = begin; fm.α,fm.β = p; nothing; end
 nbparams(fm::WeibullFamilyModel) = 2
