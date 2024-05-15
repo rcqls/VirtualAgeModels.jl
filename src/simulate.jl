@@ -3,7 +3,7 @@ function simulate(model::Model, stop::Union{Nothing, Int, Vector{Any}}; system::
     return simulate(sim, system = system, datacov = datacov)
 end
 import Base.rand
-rand(model::Model, stop::Union{Nothing, Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame = simulate(model, stop; system = system, datacov=datacov)
+rand(model::Model, stop::Union{Nothing, Int, Vector{Any}}=nothing; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame = simulate(model, stop; system = system, datacov=datacov)
 
 mutable struct Simulator
     model::Model
@@ -17,7 +17,7 @@ function simulator(model::Model, stop::Union{Nothing, Int, Vector{Any}})::Simula
     return sim
 end
 
-sim(model::Model, stop::Union{Nothing, Int, Vector{Any}})::Simulator = simulator(model, stop)
+sim(model::Model, stop::Union{Nothing, Int, Vector{Any}}=nothing)::Simulator = simulator(model, stop)
 
 function init!(sim::Simulator)
     #// Almost everything in the 5 following lines are defined in model->init_computation_values() (but this last one initializes more than this 5 lines)
@@ -32,7 +32,10 @@ function init!(sim::Simulator)
     sim.model.type = [-1]
 end
 
+#rand(sim::Simulator) = Base.rand()
+
 function simulate(sim::Simulator, stop::Union{Nothing, Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
+    #system
     add_stop_policy!(sim, stop)
     if has_maintenance_policy(sim.model)
         first(sim.model.maintenance_policy)
@@ -105,10 +108,10 @@ end
 
 function add_stop_policy!(sim::Simulator, stop::Union{Nothing, Int,Vector{Any}})
     if stop isa Int
-        sim.stop_policy = Expr(:call, :<=, :s,  stop)
+        sim.stop_policy = Expr(:call, :<, :s,  stop)
     elseif isnothing(stop)
         if isnothing(sim.stop_policy)
-            sim.stop_policy = Expr(:call, :<=, :s,  100)
+            sim.stop_policy = Expr(:call, :<, :s,  100)
         end
     else  
         sim.stop_policy =  formula_translate(Expr(:call, stop...))
