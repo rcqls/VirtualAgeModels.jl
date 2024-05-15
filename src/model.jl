@@ -56,6 +56,9 @@ mutable struct Model <: AbstractModel
 	# Formula
 	formula::Expr
 
+	# Rand function (mainly used to compare with VAM Rcpp)
+	rand::Function
+
 	Model() = begin
 		m = new()
 		make!(m)
@@ -67,6 +70,7 @@ end
 function make!(m::Model)
 	m.nb_data = -1
 	init_covariates!(m)
+	m.rand = rand
 end
 
 function init!(m::Model)

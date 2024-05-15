@@ -7,6 +7,7 @@ rand(model::Model, stop::Union{Nothing, Int, Vector{Any}}=nothing; system::Int=1
 
 mutable struct Simulator
     model::Model
+
     stop_policy::Union{Nothing,Expr}
 end
 
@@ -32,8 +33,6 @@ function init!(sim::Simulator)
     sim.model.type = [-1]
 end
 
-#rand(sim::Simulator) = Base.rand()
-
 function simulate(sim::Simulator, stop::Union{Nothing, Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
     #system
     add_stop_policy!(sim, stop)
@@ -52,7 +51,7 @@ function simulate(sim::Simulator, stop::Union{Nothing, Int, Vector{Any}}; system
         init!(sim)
         run = true
         while run
-            u = log(rand())::Float64
+            u = log(sim.model.rand())::Float64
             if sim.model.nb_params_cov > 0
             #   u *= compute_covariates(sim) #;//set_current_system launched in R for simulation
             end

@@ -1,8 +1,33 @@
 using VirtualAgeModels
 using DataFrames
+using RCall
 
-m = @vam(Temps & Type ~ (ARAInf(.4) | Weibull(.001,2.5)))
-rand(m,30)
+##### Comparison between VAM and VirtualAgeModels.jl
+## 1) VirtualAgeModels.jl simulation with randr (using runif(1) from R thanks to RCall) 
+function randr()
+	convert(Float64,R"runif(1)")
+end
+
+randr()
+
+R"set.seed(12)"
+m = @vam(Time & Type ~ (ARAInf(.4) | Weibull(.001,2.5)))
+m.rand = randr
+df = rand(m,30)
+## 2) VAM simulation
+R"""
+require(VAM)
+set.seed(12)
+dfR = simulate(sim.vam( ~ (ARAInf(.4) | Weibull(.001,2.5))),30)
+"""
+@rget dfR
+## 3) comparison
+
+dfR ≈ df
+
+
+### Rest of examples
+
 rand(m)
 
 @stop (size < 30)

@@ -49,7 +49,7 @@ function update(mp::PeriodicMaintenancePolicy, model::AbstractModel)::NamedTuple
     current=model.time[model.k]
 	time = mp.from + (floor((current - mp.from)/mp.by) + 1) * mp.by
  
-	r=rand(1)[1]
+	r=model.rand()
     t = 1
 	for p in mp.prob[1:end-1]
         if r < p
