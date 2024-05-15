@@ -86,7 +86,7 @@ function parse_model(ex_f::Expr)
     end
 end
 
-function parse_model(ex_f::Expr, data::DataFrame, datacov::DataFrame)
+function parse_model(ex_f::Expr, data::AbstractDataFrame, datacov::AbstractDataFrame)
     m = parse_model(ex_f)
     data!(m, data, datacov)
     return m
@@ -167,7 +167,7 @@ macro vam(ex_f)
 end
 
 macro vam(ex_f, args...)
-    data, datacov = Expr(:call, :DataFrame), Expr(:call, :DataFrame)
+    data, datacov = Expr(:call, :AbstractDataFrame), Expr(:call, :AbstractDataFrame)
     for el in args # mimic kwargs for data and datacov
         if Meta.isexpr(el, :(=))
             if el.args[1] == :data

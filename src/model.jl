@@ -27,7 +27,7 @@ mutable struct Model <: AbstractModel
 	family::FamilyModel
 	models::Vector{AbstractMaintenanceModel}
 	maintenance_policy::AbstractMaintenancePolicy
-	data::Vector{DataFrame}
+	data::Vector{AbstractDataFrame}
 
 	# For computation
 	indType::Float64
@@ -47,7 +47,7 @@ mutable struct Model <: AbstractModel
 	comp::Compute
 
 	# Additional Covariates stuff
-	datacov::DataFrame
+	datacov::AbstractDataFrame
 	vars_cov::Vector{Symbol}
 	params_cov::Vector{Float64}
 	sum_cov::Float64 #to save the computation
@@ -55,6 +55,9 @@ mutable struct Model <: AbstractModel
 
 	# Formula
 	formula::Expr
+
+	# Rand function (mainly used to compare with VAM Rcpp)
+	rand::Function
 
 	Model() = begin
 		m = new()
@@ -67,6 +70,7 @@ end
 function make!(m::Model)
 	m.nb_data = -1
 	init_covariates!(m)
+	m.rand = rand
 end
 
 function init!(m::Model)
@@ -206,46 +210,47 @@ function update_maintenance!(m::Model, id_mod::Int; gradient::Bool=false, hessia
 end
 
 
-function data!(m::Model,data::Union{DataFrame,Vector{DataFrame}})
-	if data isa Vector{DataFrame}
-		# TODO: considering maybe sub-dataframe form m.varnames
-		m.data = data
-		m.nb_system = length(data)
-	else
-		m.data=DataFrame[]
-		if m.varnames ∩ names(data) == m.varnames
-			data2 = data[:, m.varnames]
-			if size(data2, 2) == 2
-				prepend!(data2[!,1], 0)
-				prepend!(data2[!,2], 1)
-				push!(m.data, data2)
-				m.nb_system = 1
-			else # multi-system with size(data2, 2) ==3
-				systs = sort(unique(data2[!,1]))
-				for i=systs
-					data3 = data2[data2[!,1] .== i, 2:3]
-					prepend!(data3[!,1], 0)
-					prepend!(data3[!,2], 1)
-					push!(m.data, data3)
-				end
-				m.nb_system = length(m.data)
-			end
-		elseif size(data,2) == 2
-			df = vcat(DataFrame(time=0, type=1),data)
-			# the 2 column are renamed 
-			rename!(df,m.varnames)
-			push!(m.data, df)
-			
+function data!(m::Model,data::Vector{T}) where T <: AbstractDataFrame
+	# TODO: considering maybe sub-dataframe form m.varnames
+	m.data = data
+	m.nb_system = length(data)
+	data!(m,1) #;//default when only one system no need to
+end
+
+function data!(m::Model, data::DataFrame)
+	m.data=DataFrame[]
+	if m.varnames ∩ names(data) == m.varnames
+		data2 = data[:, m.varnames]
+		if size(data2, 2) == 2
+			prepend!(data2[!,1], 0)
+			prepend!(data2[!,2], 1)
+			push!(m.data, data2)
 			m.nb_system = 1
-		elseif size(data,2) == 3
-			m.nb_system=maximum(data[!,1])
-			for syst in sort(unique(data[!,1]))
-				data3 = data[data[!,1].==syst,2:3]
+		else # multi-system with size(data2, 2) ==3
+			systs = sort(unique(data2[!,1]))
+			for i=systs
+				data3 = data2[data2[!,1] .== i, 2:3]
 				prepend!(data3[!,1], 0)
 				prepend!(data3[!,2], 1)
-				rename!(data3,length(m.varnames) == 3 ? m.varnames[2:end] : m.varnames)
 				push!(m.data, data3)
 			end
+			m.nb_system = length(m.data)
+		end
+	elseif size(data,2) == 2
+		df = vcat(DataFrame(time=0, type=1),data)
+		# the 2 column are renamed 
+		rename!(df,m.varnames)
+		push!(m.data, df)
+		
+		m.nb_system = 1
+	elseif size(data,2) == 3
+		m.nb_system=maximum(data[!,1])
+		for syst in sort(unique(data[!,1]))
+			data3 = data[data[!,1].==syst,2:3]
+			prepend!(data3[!,1], 0)
+			prepend!(data3[!,2], 1)
+			rename!(data3,length(m.varnames) == 3 ? m.varnames[2:end] : m.varnames)
+			push!(m.data, data3)
 		end
 	end
 	data!(m,1) #;//default when only one system no need to
