@@ -1,118 +1,115 @@
-function simulate(model::Model, stop::Union{Nothing, Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
-    sim = simulator(model, stop)
-    return simulate(sim, system = system, datacov = datacov)
-end
 import Base.rand
-rand(model::Model, stop::Union{Nothing, Int, Vector{Any}}=nothing; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame = simulate(model, stop; system = system, datacov=datacov)
 
-mutable struct Simulator
-    model::Model
-
-    stop_policy::Union{Nothing,Expr}
+function rand(model::Model, stop::Union{Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
+    stop_policy_ = stop_policy(stop)
+    return rand(model, stop_policy_, system = system, datacov = datacov)
 end
 
-function simulator(model::Model, stop::Union{Nothing, Int, Vector{Any}})::Simulator
-    sim = Simulator(model, nothing)
-    add_stop_policy!(sim, stop)
-    init!(sim.model)
-    return sim
-end
+rand(model::Model; system::Int = 1, datacov::DataFrame=DataFrame()) = rand(model, 100, system = system, datacov = datacov)
 
-sim(model::Model, stop::Union{Nothing, Int, Vector{Any}}=nothing)::Simulator = simulator(model, stop)
-
-function init!(sim::Simulator)
-    #// Almost everything in the 5 following lines are defined in model->init_computation_values() (but this last one initializes more than this 5 lines)
-    sim.model.Vright=0
-    sim.model.A=1
-    sim.model.k=1
-    for mm in sim.model.models
-        init!(mm)
-    end
-    sim.model.id_mod=0 #// Since no maintenance is possible!
-    sim.model.time = [0.0]
-    sim.model.type = [-1]
-end
-
-function simulate(sim::Simulator, stop::Union{Nothing, Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
-    #system
-    add_stop_policy!(sim, stop)
-    if has_maintenance_policy(sim.model)
-        first(sim.model.maintenance_policy)
+function rand(model::Model, stop_policy::Expr; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
+    if has_maintenance_policy(model)
+        first(model.maintenance_policy)
     end
     if !isempty(datacov)
-        covariates!(sim.model, datacov)
+        covariates!(model, datacov)
     end
-    if sim.model.nb_params_cov > 0
-        system = size(sim.model.datacov)[1]
+    if model.nb_params_cov > 0
+        system = size(model.datacov)[1]
     end
 
     data = DataFrame()
     for syst in 1:system
-        init!(sim)
+        init_sim!(model)
         run = true
         while run
-            u = log(sim.model.rand())::Float64
-            if sim.model.nb_params_cov > 0
+            u = log(model.rand())::Float64
+            if model.nb_params_cov > 0
             #   u *= compute_covariates(sim) #;//set_current_system launched in R for simulation
             end
-            timeCM = virtual_age_inverse(sim.model, inverse_cumulative_hazard_rate(sim.model.family, cumulative_hazard_rate(sim.model.family, virtual_age(sim.model,sim.model.time[sim.model.k]))-u))
+            timeCM = virtual_age_inverse(model, inverse_cumulative_hazard_rate(model.family, cumulative_hazard_rate(model.family, virtual_age(model,model.time[model.k]))-u))
             #   TODO: submodels
             id_mod = 0
-            if has_maintenance_policy(sim.model)
-                timePM, typePM = update(sim.model.maintenance_policy, sim.model) # //# Peut-être ajout Vright comme argument de update
-                if timePM < timeCM && timePM < sim.model.time[sim.model.k]
+            if has_maintenance_policy(model)
+                timePM, typePM = update(model.maintenance_policy, model) # //# Peut-être ajout Vright comme argument de update
+                if timePM < timeCM && timePM < model.time[model.k]
                     #print("Warning: PM ignored since next_time(=%lf)<current_time(=%lf) at rank %d.\n",timePM,model->time[model->k],model->k);
                     print("warning")
                 end
             end
-            if !has_maintenance_policy(sim.model) || timeCM < timePM || timePM < sim.model.time[sim.model.k]
-                push!(sim.model.time,timeCM)
-                push!(sim.model.type, -1)
+            if !has_maintenance_policy(model) || timeCM < timePM || timePM < model.time[model.k]
+                push!(model.time,timeCM)
+                push!(model.type, -1)
                 id_mod=0
             else
-                push!(sim.model.time, timePM)
+                push!(model.time, timePM)
                 #//DEBUG[distrib type1]: typeCptAP++;if(typePM==1) type1CptAP++;printf("typePM=%d\n",typePM);
-                push!(sim.model.type, typePM)
+                push!(model.type, typePM)
                 id_mod=typePM
             end
-            update_Vleft!(sim.model) #, false,false)
-            update_maintenance!(sim.model, id_mod) #false,false)
-            run = ok(sim)
+            update_Vleft!(model) #, false,false)
+            update_maintenance!(model, id_mod) #false,false)
+            run = ok(model, stop_policy)
             ## TODO work on stop later
         end
-        data = vcat(data,DataFrame(system=syst, time=sim.model.time, type=sim.model.type)[2:length(sim.model.time),:]) #LD: vcat(data,DataFrame(system=syst, time=sim.model.time, type=sim.model.type))
+        data = vcat(data,DataFrame(system=syst, time=model.time, type=model.type)[2:length(model.time),:]) #LD: vcat(data,DataFrame(system=syst, time=sim.model.time, type=sim.model.type))
     end
     ## println(data)
     if system == 1
         data = data[:,[:time, :type]]
     end
     df = data#LD: df = data[2:size(data,1),:]
-    if (system > 1) && (length(sim.model.varnames)==2) #LD: (system > 1)
-        rename!(df, vcat(["System"], sim.model.varnames) )
+    if (system > 1) && (length(model.varnames)==2) #LD: (system > 1)
+        rename!(df, vcat(["System"], model.varnames) )
     else
-        rename!(df, sim.model.varnames)
+        rename!(df, model.varnames)
     end
     df
 end
 
-simulate(sim::Simulator; system::Int=1, datacov::DataFrame=DataFrame()) = simulate(sim, nothing, system=system, datacov = datacov)
+function init_sim!(model::Model)
+    #// Almost everything in the 5 following lines are defined in model->init_computation_values() (but this last one initializes more than this 5 lines)
+    model.Vright=0
+    model.A=1
+    model.k=1
+    for mm in model.models
+        init!(mm)
+    end
+    model.id_mod=0 #// Since no maintenance is possible!
+    model.time = [0.0]
+    model.type = [-1]
+end
 
-function ok(sim::Simulator)::Bool
-    s = length(sim.model.time) - 1 # 1st is 0 time to be removed when returned
-    t = sim.model.time[sim.model.k]
+function ok(model::Model, stop_policy::Expr)::Bool
+    s = length(model.time) - 1 # 1st is 0 time to be removed when returned
+    t = model.time[model.k]
     eval(:(s=$s))
     eval(:(t=$t))
-    eval(sim.stop_policy)
+    eval(stop_policy)
 end
 
-function add_stop_policy!(sim::Simulator, stop::Union{Nothing, Int,Vector{Any}})
-    if stop isa Int
-        sim.stop_policy = Expr(:call, :<, :s,  stop)
+function stop_policy(stop::Union{Nothing, Int, Vector{Any}})::Expr
+    return if stop isa Int
+        Expr(:call, :<, :s,  stop)
     elseif isnothing(stop)
-        if isnothing(sim.stop_policy)
-            sim.stop_policy = Expr(:call, :<, :s,  100)
-        end
+        Expr(:call, :<, :s,  100)
     else  
-        sim.stop_policy =  formula_translate(Expr(:call, stop...))
+        formula_translate(Expr(:call, stop...))
     end
 end
+
+### Simulator is no more than model with stop_policy embedded together
+mutable struct Simulator
+    model::Model
+    stop_policy::Expr
+end
+
+function Simulator(model::Model, stop::Union{Nothing, Int, Vector{Any}})::Simulator
+    sim = Simulator(model, stop_policy(stop))
+    init_sim!(model)
+    return sim
+end
+
+rand(sim::Simulator; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame = rand(sim.model, sim.stop_policy; system = system, datacov = datacov)
+
+stop_policy!(sim::Simulator, stop::Union{Nothing, Int,Vector{Any}}) = sim.stop_policy = stop_policy(stop)

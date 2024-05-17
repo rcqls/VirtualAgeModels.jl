@@ -5,7 +5,8 @@ import Base.first
 import Plots.plot
 
 
-export parse_model, @vam, @stop, params, params!, nbparams, data, data!, simulator, sim, simulate, mle, bayesian
+export Simulator
+export parse_model, @vam, @stop, params, params!, nbparams, data, data!, mle, bayesian
 export contrast, gradient, hessian
 export plot
 
