@@ -84,6 +84,7 @@ df = rand(m,30)
 params(s.model)
 
 df2 = rand(s, system=30)
+s.model.data
 
 df = rand(
     @vam(Temps & Type ~ (ARA1(.5) | Weibull(0.01,2.5)) & (ARAInf(.7)+ARAInf(.3)+ ABAO()|Periodic(12,[0.6,0.4]) * AtIntensity(1.2))),

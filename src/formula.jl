@@ -10,7 +10,7 @@ function parse_model(ex_f::Expr)
     m.formula = ex_f
     if Meta.isexpr(ex_f, :call)
         ex_m = ex_f
-        varnames = ["Time", "Type"] # default names
+        varnames = ["time", "type"] # default names
         ## model detection
         if ex_f.args[1] == :&
             ## No names given on the left side of :~ => def_names used
@@ -167,7 +167,7 @@ macro vam(ex_f)
 end
 
 macro vam(ex_f, args...)
-    data, datacov = Expr(:call, :AbstractDataFrame), Expr(:call, :AbstractDataFrame)
+    data, datacov = Expr(:call, :DataFrame), Expr(:call, :DataFrame)
     for el in args # mimic kwargs for data and datacov
         if Meta.isexpr(el, :(=))
             if el.args[1] == :data

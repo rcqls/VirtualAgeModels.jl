@@ -1,4 +1,4 @@
-function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
+function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool = true, fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
     mle = MLE(model, data, datacov)
     # TODO: check boundary for fixed
     if fixed isa Vector{Bool}
@@ -50,8 +50,8 @@ function mle(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataF
 end
 
 function contrast(model::Model, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Float64
-        m = MLE(model, data, datacov)
-        return contrast(m, θ, profile = profile)
+    m = MLE(model, data, datacov)
+    return contrast(m, θ, profile = profile)
 end
 
 contrast(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = contrast(model, params(model), data; profile = profile, datacov = datacov)

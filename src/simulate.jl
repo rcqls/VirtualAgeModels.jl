@@ -58,12 +58,13 @@ function rand(model::Model, stop_policy::Expr; system::Int=1, datacov::DataFrame
     if system == 1
         data = data[:,[:time, :type]]
     end
-    df = data#LD: df = data[2:size(data,1),:]
+    df = data #LD: df = data[2:size(data,1),:]
     if (system > 1) && (length(model.varnames)==2) #LD: (system > 1)
-        rename!(df, vcat(["System"], model.varnames) )
+        rename!(df, vcat(["system"], model.varnames) )
     else
         rename!(df, model.varnames)
     end
+    data!(model, df)
     df
 end
 
