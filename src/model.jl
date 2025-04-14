@@ -1,4 +1,4 @@
-mutable struct Model <: AbstractModel
+mutable struct VirtualAgeModel <: AbstractVirtualAgeModel
 	# Main info
     k::Int # current index
 	Δt::Float64
@@ -59,7 +59,7 @@ mutable struct Model <: AbstractModel
 	# Rand function (mainly used to compare with VAM Rcpp)
 	rand::Function
 
-	Model() = begin
+	VirtualAgeModel() = begin
 		m = new()
 		make!(m)
 		return m
@@ -67,13 +67,13 @@ mutable struct Model <: AbstractModel
 end
 
 ## Don't know if it is a good name
-function make!(m::Model)
+function make!(m::VirtualAgeModel) 
 	m.nb_data = -1
 	init_covariates!(m)
 	m.rand = rand
 end
 
-function init!(m::Model)
+function init!(m::VirtualAgeModel)
 		m.k = 1  # current position in data
 		m.Δt = 0
 		m.current_system = 1 # current system
@@ -130,7 +130,7 @@ function init!(m::Model)
 		return nothing
 end
 
-function init_covariates!(m::Model)
+function init_covariates!(m::VirtualAgeModel)
 	# Additional Covariates stuff
 	m.nb_params_cov = 0
 	m.datacov = DataFrame()
@@ -139,16 +139,16 @@ function init_covariates!(m::Model)
 	m.expr_cov = nothing
 end
 
-function inc!(m::Model)
+function inc!(m::VirtualAgeModel)
 	m.k += 1
 	m.Δt = m.time[m.k] - m.time[m.k - 1]
 end
 
-nbparams(m::Model)::Int = m.nb_params_family + m.nb_params_maintenance + m.nb_params_cov
+nbparams(m::VirtualAgeModel)::Int = m.nb_params_family + m.nb_params_maintenance + m.nb_params_cov
 
-params(m::Model)::Parameters = cat(params(m.family),(map(m.models) do mm;params(mm); end)...,m.params_cov,dims=1)
+params(m::VirtualAgeModel)::Parameters = cat(params(m.family),(map(m.models) do mm;params(mm); end)...,m.params_cov,dims=1)
 
-function params!(m::Model, θ::Vector{Float64})
+function params!(m::VirtualAgeModel, θ::Vector{Float64})
 	from, to = 1, nbparams(m.family)
 	params!(m.family,θ[from:to])
 	for mm in m.models
@@ -165,19 +165,19 @@ function params!(m::Model, θ::Vector{Float64})
 	end
 end
 
-priors(m::Model)::Priors = cat(m.family.priors,(map(m.models) do mm;mm.priors; end)...,dims=1)
+priors(m::VirtualAgeModel)::Priors = cat(m.family.priors,(map(m.models) do mm;mm.priors; end)...,dims=1)
 
-function init_compute!(m::Model)
+function init_compute!(m::VirtualAgeModel)
 	init!(m.comp)
 	for mm in m.models
 		init!(mm)
 	end
 end
 
-virtual_age(m::Model, x::Float64)::Float64 = m.Vright + (x  - m.time[m.k]) * m.A
-virtual_age_inverse(m::Model, x::Float64) = (x - m.Vright) / m.A + m.time[m.k]
+virtual_age(m::VirtualAgeModel, x::Float64)::Float64 = m.Vright + (x  - m.time[m.k]) * m.A
+virtual_age_inverse(m::VirtualAgeModel, x::Float64) = (x - m.Vright) / m.A + m.time[m.k]
 
-function update_Vleft!(m::Model; gradient::Bool=false, hessian::Bool=false)
+function update_Vleft!(m::VirtualAgeModel; gradient::Bool=false, hessian::Bool=false)
 	# /*if(model->k < 10) printf("Vleft:%lf\n", model->Vleft);*/
 	m.Vleft = virtual_age(m, m.time[m.k + 1])
 	# //printf("Vleft:%lf\n", model->Vleft);
@@ -201,7 +201,7 @@ function update_Vleft!(m::Model; gradient::Bool=false, hessian::Bool=false)
 	end
 end
 
-function update_maintenance!(m::Model, id_mod::Int; gradient::Bool=false, hessian::Bool=false)
+function update_maintenance!(m::VirtualAgeModel, id_mod::Int; gradient::Bool=false, hessian::Bool=false)
 	# id_params is used inside update! for gradient and hessian
 	m.id_params = m.id_params_list[1 + id_mod]
 	# println("up maint $id_mod $(m.id_params)")
@@ -210,14 +210,14 @@ function update_maintenance!(m::Model, id_mod::Int; gradient::Bool=false, hessia
 end
 
 
-function data!(m::Model,data::Vector{T}) where T <: AbstractDataFrame
+function data!(m::VirtualAgeModel,data::Vector{T}) where T <: AbstractDataFrame
 	# TODO: considering maybe sub-dataframe form m.varnames
 	m.data = data
 	m.nb_system = length(data)
 	data!(m,1) #;//default when only one system no need to
 end
 
-function data!(m::Model, data::DataFrame)
+function data!(m::VirtualAgeModel, data::DataFrame)
 	m.data=DataFrame[]
 	if m.varnames ∩ names(data) == m.varnames
 		data2 = data[:, m.varnames]
@@ -256,7 +256,7 @@ function data!(m::Model, data::DataFrame)
 	data!(m,1) #;//default when only one system no need to
 end
 
-function data!(m::Model, i::Int)
+function data!(m::VirtualAgeModel, i::Int)
 	if length(m.data) >= i
 		data=m.data[i]
 		m.time = data[!,1]
@@ -267,7 +267,7 @@ end
 
 # This methods only apply when data or datacov not empty
 # used inside MLE and parse_model
-function data!(m::Model, data::DataFrame, datacov::DataFrame)
+function data!(m::VirtualAgeModel, data::DataFrame, datacov::DataFrame)
 	if !isempty(data)
         data!(m, data)
     end
@@ -277,14 +277,14 @@ function data!(m::Model, data::DataFrame, datacov::DataFrame)
     end
 end
 
-function data(m::Model, i::Int)::DataFrame
+function data(m::VirtualAgeModel, i::Int)::DataFrame
 	data!(m, i) #;//Skipped if data is unset (see above)
 	return DataFrame(time=m.time[2:end],type=m.type[2:end])
 end
 
-data(m::Model)=data(m, 1)
+data(m::VirtualAgeModel)=data(m, 1)
 
-function virtual_age_info(m::Model, v::AbstractVector{Float64}, exp_cov::Float64; type::Symbol=:i)
+function virtual_age_info(m::VirtualAgeModel, v::AbstractVector{Float64}, exp_cov::Float64; type::Symbol=:i)
 	return if type == :i
 		exp_cov .* m.A .* (x -> hazard_rate(m.family, x)).(v) # hazard_rate.(m.family, v)
 	elseif type == :I
@@ -298,7 +298,7 @@ function virtual_age_info(m::Model, v::AbstractVector{Float64}, exp_cov::Float64
 	end
 end
 
-function virtual_age_info(m::Model, from::Float64, to::Float64, by::Float64, exp_cov::Float64; type::Symbol=:v)
+function virtual_age_info(m::VirtualAgeModel, from::Float64, to::Float64, by::Float64, exp_cov::Float64; type::Symbol=:v)
 	t = from:by:to
 	v = range(virtual_age(m, from), virtual_age(m, to), length(t))
 	if type == :v
@@ -308,7 +308,7 @@ function virtual_age_info(m::Model, from::Float64, to::Float64, by::Float64, exp
 	end
 end
 
-function virtual_age_infos(m::Model, from::Float64, to::Float64, by::Float64 = 0.01; type::Symbol=:v)
+function virtual_age_infos(m::VirtualAgeModel, from::Float64, to::Float64, by::Float64 = 0.01; type::Symbol=:v)
 
 	init_compute!(m) # for m.comp.S1
     
@@ -338,7 +338,7 @@ function virtual_age_infos(m::Model, from::Float64, to::Float64, by::Float64 = 0
 	return infos
 end
 
-function select_current_system(m::Model, i::Int, compute::Bool)
+function select_current_system(m::VirtualAgeModel, i::Int, compute::Bool)
 	#//Covariates related
 	m.current_system = i
 	#//simulation: compute=false since only computation in c++ and set_current_system in R
@@ -349,7 +349,7 @@ function select_current_system(m::Model, i::Int, compute::Bool)
 end
 
 # //Covariates related
-function covariates!(m::Model,formula::Expr)
+function covariates!(m::VirtualAgeModel,formula::Expr)
 	if !isnothing(formula)
 		m.expr_cov = formula
 		m.params_cov = Parameter[]
@@ -362,14 +362,14 @@ function covariates!(m::Model,formula::Expr)
 	end
 end
 
-covariates!(m::Model) = covariates!(m, m.expr_cov)
+covariates!(m::VirtualAgeModel) = covariates!(m, m.expr_cov)
 
-function covariates!(m::Model, data::DataFrame) 
+function covariates!(m::VirtualAgeModel, data::DataFrame) 
 	m.datacov = data[!,m.vars_cov]
 	m.nb_params_cov = size(m.datacov)[2]
 end
 
-function compute_covariates(m::Model)
+function compute_covariates(m::VirtualAgeModel)
 	m.sum_cov = 0.0
 	# println(m.params_cov)
 	# println(m.datacov)
@@ -381,11 +381,11 @@ function compute_covariates(m::Model)
 	return m.sum_cov
 end
 
-covariate(m::Model, j::Int) = m.datacov[m.current_system, j]
+covariate(m::VirtualAgeModel, j::Int) = m.datacov[m.current_system, j]
 
-has_maintenance_policy(m::Model)::Bool = isdefined(m,:maintenance_policy) #|| !isnothing(m.maintenance_policy)
+has_maintenance_policy(m::VirtualAgeModel)::Bool = isdefined(m,:maintenance_policy) #|| !isnothing(m.maintenance_policy)
 
-function max_memory(m::Model)::Int
+function max_memory(m::VirtualAgeModel)::Int
 	maxmem = 1
 	for mm in m.models
 		if isdefined(mm,:m)
@@ -397,12 +397,12 @@ function max_memory(m::Model)::Int
 	return maxmem
 end
 
-function isbayesian(m::Model)::Bool
+function isbayesian(m::VirtualAgeModel)::Bool
 	return all(map(isbayesian, m.models))
 end
 
 # Used inside ModelTest do guess the r formula and RData
-function rterms(m::Model, data::DataFrame, datacov::DataFrame=DataFrame())
+function rterms(m::VirtualAgeModel, data::DataFrame, datacov::DataFrame=DataFrame())
 	f = m.formula
 	df_rexpr = string("data.frame(", 
 		join(map(names(data)) do var

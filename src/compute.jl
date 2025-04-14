@@ -26,14 +26,14 @@ mutable struct Compute
     Compute() = new()
 end
 
-function Compute(m::AbstractModel)
+function Compute(m::AbstractVirtualAgeModel)
     comp = Compute()
     init_dims!(comp,m)
     init!(comp,deriv=true)
     return comp
 end
 
-function init_dims!(c::Compute, m::AbstractModel)
+function init_dims!(c::Compute, m::AbstractVirtualAgeModel)
     c.nbm = m.nb_params_maintenance
     c.nbd = m.nb_params_maintenance + m.nb_params_family - 1 + m.nb_params_cov
     c.nbc = m.nb_params_cov

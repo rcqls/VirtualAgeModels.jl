@@ -2,7 +2,7 @@ using VirtualAgeModels
 using DataFrames
 #using RData
 using RCall
-using Plots
+#using Plots
 
 R"""
 require(VAM)
@@ -15,11 +15,13 @@ res <- coef(AMC_mle)
 @rget res
 
 @macroexpand  @vam(Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)))
+m = @vam Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)) # data=AMC_Amb
 m = @vam Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)) data=AMC_Amb
+data!(m, AMC_Amb)
 data(m)
 ml = mle(m, AMC_Amb)
 ml.optim
-params(m)
+params(ml)
 
 m2 = @vam Time & Type ~ (ARA∞(0.6) | Weibull(1.0,3.0)) data=AMC_Amb
 ml2 = mle(m2)
@@ -38,6 +40,6 @@ params(ml2)
 # plot(m2)
 
 # VirtualAgeModels.symbol2typeplot
-plot(m, :I)
+plot(m, :v)
 plot!(m, :i)
 plot(m, :i)

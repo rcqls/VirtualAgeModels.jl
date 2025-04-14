@@ -2,7 +2,7 @@
 
 mutable struct Bayesian
     mle::MLE
-    model::Model
+    model::VirtualAgeModel
     estimates::DataFrame
     proposal::Function # see proposal!, rand and pdf methods below
     σ::Float64
@@ -10,7 +10,7 @@ mutable struct Bayesian
     Bayesian() = new()
 end
 
-function bayesian(model::Model; mode::ProposalMode = normal, method = Newton())
+function bayesian(model::VirtualAgeModel; mode::ProposalMode = normal, method = Newton())
     if isbayesian(model)
         b = Bayesian()
         b.model = model

@@ -6,7 +6,7 @@
 # Systeme & Temps & Type ~ (ARA1(.5) | Weibull(0.01,2.5)) & (ARAInf(.7)+ARAInf(.3)|Periodic(12,prob=c(0.6,0.4)))
 
 function parse_model(ex_f::Expr)
-    m = Model()
+    m = VirtualAgeModel()
     m.formula = ex_f
     if Meta.isexpr(ex_f, :call)
         ex_m = ex_f
@@ -92,7 +92,7 @@ function parse_model(ex_f::Expr, data::AbstractDataFrame, datacov::AbstractDataF
     return m
 end
 
-function parse_cm!(m::AbstractModel,ex_cm::Expr)
+function parse_cm!(m::AbstractVirtualAgeModel,ex_cm::Expr)
     if ex_cm.args[1] == :|
         #push!(m.models,eval(ex_cm.args[2])) # CM (Corrective Maintenance)
         add_maintenance_model!(m,ex_cm.args[2])
@@ -133,7 +133,7 @@ function parse_covariates(ex_fm::Expr)
     return (ex,)
 end
 
-function add_family_model!(m::AbstractModel,ex_fm::Expr)
+function add_family_model!(m::AbstractVirtualAgeModel,ex_fm::Expr)
     res = parse_covariates(ex_fm)
     if length(res) == 1
         parse_bayesian_parameters!(ex_fm)
@@ -145,7 +145,7 @@ function add_family_model!(m::AbstractModel,ex_fm::Expr)
     end
 end
 
-function add_maintenance_model!(m::AbstractModel,ex_mm::Expr)
+function add_maintenance_model!(m::AbstractVirtualAgeModel,ex_mm::Expr)
     pipe_index = findall(e -> Meta.isexpr(e,:call) && e.args[1] == :|, ex_mm.args)
     if !isempty(pipe_index) && length(pipe_index) == 1
     # OLD: if Meta.isexpr(ex_mm.args[end],:call) && ex_mm.args[end].args[1] == :|

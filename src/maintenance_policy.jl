@@ -2,7 +2,7 @@ abstract type AbstractMaintenancePolicy end
 function first(mp::AbstractMaintenancePolicy); end
 
 abstract type MaintenancePolicyWithExternalModel <: AbstractMaintenancePolicy end
-function update_external_model(mp::MaintenancePolicyWithExternalModel, model::AbstractModel)
+function update_external_model(mp::MaintenancePolicyWithExternalModel, model::AbstractVirtualAgeModel)
     mod = mp.model # external model attached to MP
 
     if isnothing(mod)
@@ -45,7 +45,7 @@ type_size(mp::PeriodicMaintenancePolicy)::Int = length(mp.prob)
 
 function first(mp::PeriodicMaintenancePolicy); end
 
-function update(mp::PeriodicMaintenancePolicy, model::AbstractModel)::NamedTuple{(:time, :type), Tuple{Float64, Int64}}
+function update(mp::PeriodicMaintenancePolicy, model::AbstractVirtualAgeModel)::NamedTuple{(:time, :type), Tuple{Float64, Int64}}
     current=model.time[model.k]
 	time = mp.from + (floor((current - mp.from)/mp.by) + 1) * mp.by
  
@@ -76,12 +76,12 @@ type_size(mp::AtTimesMaintenancePolicy)::Int = mp.differentTypeIfCM ? 2 : 1
 
 mutable struct AtIntensityMaintenancePolicy <: MaintenancePolicyWithExternalModel
     level::Float64
-    model::Union{Nothing, AbstractModel}
+    model::Union{Nothing, AbstractVirtualAgeModel}
 end
 AtIntensityMaintenancePolicy(level::Float64) = AtIntensityMaintenancePolicy(level, nothing)
 
 type_size(mp::AtIntensityMaintenancePolicy)::Int = 1
-function update(mp::AtIntensityMaintenancePolicy, model::AbstractModel)::NamedTuple{(:time, :type), Tuple{Float64, Int64}}
+function update(mp::AtIntensityMaintenancePolicy, model::AbstractVirtualAgeModel)::NamedTuple{(:time, :type), Tuple{Float64, Int64}}
     
     mod=update_external_model(mp, model)
 	u = mod.A
@@ -95,7 +95,7 @@ end
 
 mutable struct AtVirtualAgeMaintenancePolicy <:  MaintenancePolicyWithExternalModel
     level::Float64
-    external_model::AbstractModel
+    external_model::AbstractVirtualAgeModel
 end
 
 type_size(mp::AtVirtualAgeMaintenancePolicy)::Int = 1
@@ -103,7 +103,7 @@ type_size(mp::AtVirtualAgeMaintenancePolicy)::Int = 1
 
 mutable struct AtFailureProbabilityMaintenancePolicy <: AbstractMaintenancePolicy
     level::Vector{Float64}
-    external_model::AbstractModel
+    external_model::AbstractVirtualAgeModel
 end
 
 type_size(mp::AtFailureProbabilityMaintenancePolicy)::Int = 1
@@ -139,7 +139,7 @@ function first(mp::MaintenancePolicyList)
 end
 
 
-function update(mp::MaintenancePolicyList,model::AbstractModel)
+function update(mp::MaintenancePolicyList,model::AbstractVirtualAgeModel)
     time, type = update(mp.policies[1], model)
     ts = type_size(mp.policies[1])
     for policy in mp.policies[2:end] 

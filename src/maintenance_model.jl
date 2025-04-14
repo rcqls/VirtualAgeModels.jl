@@ -166,7 +166,7 @@ function GQR_ARAm(ρQR::Prior, ρARA::Prior, m::Int, f::Function=identity)
     return m
 end
 
-function update!(m::ARA1, model::AbstractModel; gradient::Bool=false, hessian::Bool=false)
+function update!(m::ARA1, model::AbstractVirtualAgeModel; gradient::Bool=false, hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -257,7 +257,7 @@ function update!(m::ARA1, model::AbstractModel; gradient::Bool=false, hessian::B
     model.Vright += prov
 end
 
-function update!(m::ARAInf, model::AbstractModel; gradient::Bool=false, hessian::Bool=false)
+function update!(m::ARAInf, model::AbstractVirtualAgeModel; gradient::Bool=false, hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -351,7 +351,7 @@ function update!(m::ARAInf, model::AbstractModel; gradient::Bool=false, hessian:
 end
 
 
-function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::ARAm, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1;
 
     nk = model.k-1 #LD: model.k
@@ -551,7 +551,7 @@ function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Boo
 end
 
 
-function update!(m::AGAN, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::AGAN, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -583,7 +583,7 @@ function update!(m::AGAN, model::AbstractModel;gradient::Bool=false,hessian::Boo
     end
 end
 
-function update!(m::ABAO, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::ABAO, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
     nk = model.k-1 #LD: model.k
@@ -652,7 +652,7 @@ function update!(m::ABAO, model::AbstractModel;gradient::Bool=false,hessian::Boo
     model.Vright += prov
 end
 
-function update!(m::AGAP, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::AGAP, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
      
     inc!(model) #model.k += 1
 
@@ -704,7 +704,7 @@ function update!(m::AGAP, model::AbstractModel;gradient::Bool=false,hessian::Boo
 end
 
 
-function update!(m::QAGAN, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::QAGAN, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
     nk = model.k-1 #LD: model.k
@@ -743,7 +743,7 @@ function update!(m::QAGAN, model::AbstractModel;gradient::Bool=false,hessian::Bo
 end
 
 
-function update!(m::QR, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::QR, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
     nk = model.k-1 #LD: model.k
@@ -791,7 +791,7 @@ function update!(m::QR, model::AbstractModel;gradient::Bool=false,hessian::Bool=
     end
 end
 
-function update!(m::GQR, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -845,7 +845,7 @@ function update!(m::GQR, model::AbstractModel;gradient::Bool=false,hessian::Bool
     end
 end
 
-function update!(m::GQR_ARA1, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR_ARA1, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     m.K += 1
     inc!(model) #model.k += 1;
 
@@ -967,7 +967,7 @@ function update!(m::GQR_ARA1, model::AbstractModel;gradient::Bool=false,hessian:
     model.A *= m.ρQR^δ
 end
 
-function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR_ARAInf, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
 
@@ -1091,7 +1091,7 @@ function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessia
     model.A = m.ρQR^δ * model.A
 end
 
-function update!(m::GQR_ARAm, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR_ARAm, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1;
     m.K += 1
 
