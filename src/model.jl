@@ -73,7 +73,7 @@ function show(io::IO, m::VirtualAgeModel)
 	if !isnothing(m.expr_cov)
 		f = f[1:end-1] * " | " * join(string.(m.params_cov) .* string.(m.vars_cov)," + ") * ")"
 	end
-	print(io, " ~ ", join(string.(m.models), " + ") ," | " , f)
+	print(io, join(m.varnames, " & ") , " ~ ", join(string.(m.models), " + ") ," | " , f)
 end
 
 ## Don't know if it is a good name
