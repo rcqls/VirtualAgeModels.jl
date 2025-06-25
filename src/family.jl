@@ -45,7 +45,7 @@ end
 WeibullFamilyModel(α::Real, β::Real) = WeibullFamilyModel(convert(Parameter,α), convert(Parameter,β))
 
 function show(io::IO, fm::WeibullFamilyModel)
-    print(io, "Weilbull(",isnothing(m.priors[1]) ? fm.α : "~" * string(m.priors[1]),", ",isnothing(m.priors[2]) ? fm.β : "~" * string(m.priors[2]),")")
+    print(io, "Weilbull(",isnothing(fm.priors[1]) ? fm.α : "~" * string(fm.priors[1]),", ",isnothing(fm.priors[2]) ? fm.β : "~" * string(fm.priors[2]),")")
 end
 
 params(fm::WeibullFamilyModel)::Parameters = [fm.α,fm.β]
@@ -109,7 +109,7 @@ function  LogLinearFamilyModel(α::Parameter, β::Parameter)
 end
 
 function show(io::IO, fm::LogLinearFamilyModel)
-    print(io, "LogLinear(",isnothing(m.priors[1]) ? fm.α : "~" * string(m.priors[1]),", ",isnothing(m.priors[2]) ? fm.β : "~" * string(m.priors[2]),")")
+    print(io, "LogLinear(",isnothing(fm.priors[1]) ? fm.α : "~" * string(fm.priors[1]),", ",isnothing(m.priors[2]) ? fm.β : "~" * string(fm.priors[2]),")")
 end
 params(fm::LogLinearFamilyModel)::Parameters = [fm.α,fm.β]
 params!(fm::LogLinearFamilyModel, p::Parameters) = begin;fm.α,fm.β = p; nothing; end
@@ -210,7 +210,7 @@ function Weibull3FamilyModel(α::Parameter, β::Parameter, δ::Parameter)
     return fm
 end
 function show(io::IO, fm::Weibull3FamilyModel)
-    print(io, "Weibull3(",isnothing(m.priors[1]) ? fm.α : "~" * string(m.priors[1]),", ",isnothing(m.priors[2]) ? fm.β : "~" * string(m.priors[2]),", ",isnothing(m.priors[3]) ? fm.δ : "~" * string(m.priors[3]),")")
+    print(io, "Weibull3(",isnothing(fm.priors[1]) ? fm.α : "~" * string(fm.priors[1]),", ",isnothing(fm.priors[2]) ? fm.β : "~" * string(fm.priors[2]),", ",isnothing(m.priors[3]) ? fm.δ : "~" * string(m.priors[3]),")")
 end
 params(fm::Weibull3FamilyModel)::Parameters = [fm.α,fm.β,fm.δ]
 params!(fm::Weibull3FamilyModel, p::Parameters) = begin; fm.α,fm.β,fm.δ = p; nothing; end
