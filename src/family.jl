@@ -33,6 +33,7 @@ mutable struct WeibullFamilyModel <: FamilyModel
     priors::Priors
     WeibullFamilyModel() = new()
 end
+
 function WeibullFamilyModel(α::Parameter, β::Parameter)
     fm = WeibullFamilyModel()
     fm.α, fm.β =  α, β
@@ -42,6 +43,10 @@ function WeibullFamilyModel(α::Parameter, β::Parameter)
     return fm
 end
 WeibullFamilyModel(α::Real, β::Real) = WeibullFamilyModel(convert(Parameter,α), convert(Parameter,β))
+
+function show(io::IO, fm::WeibullFamilyModel)
+    print(io, "Weilbull(",fm.α,", ",fm.β,")")
+end
 
 params(fm::WeibullFamilyModel)::Parameters = [fm.α,fm.β]
 params!(fm::WeibullFamilyModel, p::Parameters) = begin; fm.α,fm.β = p; nothing; end
@@ -101,6 +106,10 @@ function  LogLinearFamilyModel(α::Parameter, β::Parameter)
     fm.comp = FamilyCompute()
     init!(fm.comp, fm)
     return fm
+end
+
+function show(io::IO, fm::LogLinearFamilyModel)
+    print(io, "LogLinear(",fm.α,", ",fm.β,")")
 end
 params(fm::LogLinearFamilyModel)::Parameters = [fm.α,fm.β]
 params!(fm::LogLinearFamilyModel, p::Parameters) = begin;fm.α,fm.β = p; nothing; end
@@ -199,6 +208,9 @@ function Weibull3FamilyModel(α::Parameter, β::Parameter, δ::Parameter)
     fm.comp = FamilyCompute()
     init!(fm.comp, fm)
     return fm
+end
+function show(io::IO, fm::Weibull3FamilyModel)
+    print(io, "Weibull3(",fm.α,", ",fm.β,", ",fm.δ,")")
 end
 params(fm::Weibull3FamilyModel)::Parameters = [fm.α,fm.β,fm.δ]
 params!(fm::Weibull3FamilyModel, p::Parameters) = begin; fm.α,fm.β,fm.δ = p; nothing; end

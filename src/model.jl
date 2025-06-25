@@ -66,6 +66,16 @@ mutable struct VirtualAgeModel <: AbstractVirtualAgeModel
 	end
 end
 
+function show(io::IO, m::VirtualAgeModel)
+	# print(io, "formula: ", m.family)
+	
+	f = string(m.family)
+	if !isnothing(m.expr_cov)
+		f = f[1:end-1] * " | " * join(string.(m.params_cov) .* string.(m.vars_cov)," + ") * ")"
+	end
+	print(io, " ~ ", join(string.(m.models), " + ") ," | " , f)
+end
+
 ## Don't know if it is a good name
 function make!(m::VirtualAgeModel) 
 	m.nb_data = -1

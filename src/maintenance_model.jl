@@ -10,6 +10,7 @@ mutable struct ARA1 <: AbstractMaintenanceModel
     priors::Priors
 end
 ARA1(ρ::Parameter) = ARA1(ρ,[nothing])
+show(io::IO, m::ARA1) = print(io, "ARA₁(",m.ρ, ")")
 params(m::ARA1)::Parameters = [m.ρ]
 params!(m::ARA1, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::ARA1) = 1
@@ -20,6 +21,7 @@ mutable struct ARAInf <: AbstractMaintenanceModel
 end
 ARAInf(ρ::Parameter) = ARAInf(ρ,[nothing])
 ARA∞(ρ::Parameter) = ARAInf(ρ)
+show(io::IO, m::ARAInf) = print(io, "ARA∞(",m.ρ, ")")
 params(m::ARAInf)::Parameters = [m.ρ]
 params!(m::ARAInf, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::ARAInf) = 1
@@ -31,6 +33,7 @@ mutable struct ARAm <: AbstractMaintenanceModel
     priors::Priors
 end
 ARAm(ρ::Parameter,m::Int) = ARAm(ρ,m,[nothing])
+show(io::IO, m::ARAm) = print(io, "ARAₘ(",m.ρ, ", ", m.m , ")")
 params(m::ARAm)::Parameters = [m.ρ]
 params!(m::ARAm, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::ARAm) = 1 # only parameters considered in the optim
@@ -38,22 +41,26 @@ ARAm(ρ::Prior,m::Int) = ARAm(0.0,m,[ρ])
 
 struct AGAN <: AbstractMaintenanceModel
 end
+show(io::IO, m::AGAN) = print(io, "AGAN()")
 params(m::AGAN)::Parameters = []
 params!(m::AGAN, p::Parameters) = nothing
 nbparams(m::AGAN) = 0
 struct ABAO <: AbstractMaintenanceModel
 end
+show(io::IO, m::ABAO) = print(io, "ABAO()")
 params(m::ABAO)::Parameters = []
 params!(m::ABAO, p::Parameters) = nothing
 nbparams(m::ABAO) = 0
 
 struct AGAP <: AbstractMaintenanceModel
 end
+show(io::IO, m::AGAP) = print(io, "AGAP()")
 params(m::AGAP)::Parameters = []
 params!(m::AGAP, p::Parameters) = nothing
 nbparams(m::AGAP) = 0
 mutable struct QAGAN <: AbstractMaintenanceModel
 end
+show(io::IO, m::QAGAN) = print(io, "QAGAN()")
 params(m::QAGAN)::Parameters = []
 params!(m::QAGAN, p::Parameters) = nothing
 nbparams(m::QAGAN) = 0
@@ -63,6 +70,7 @@ mutable struct QR <: AbstractMaintenanceModel
     priors::Priors
 end
 QR(ρ::Parameter) = QR(ρ,[nothing])
+show(io::IO, m::QR) = print(io, "QR(",m.ρ ,")")
 params(m::QR)::Parameters = [m.ρ]
 params!(m::QR, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::QR) = 1
@@ -86,6 +94,7 @@ function GQR(ρ::Parameter, f::Function=identity)
     end
     return m
 end
+show(io::IO, m::GQR) = print(io, "GQR(",m.ρ , ", ", m.f,", ", m.K, ")")
 params(m::GQR)::Parameters = [m.ρ]
 params!(m::GQR, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::GQR) = 1
@@ -109,6 +118,7 @@ function GQR_ARA1(ρQR::Parameter, ρARA::Parameter, f::Function=identity)
     end
     return m
 end
+show(io::IO, m::GQR_ARA1) = print(io, "GQR_ARA₁(",m.ρQR , ", ", m.ρARA ,", ", m.f,", ", m.K, ")")
 params(m::GQR_ARA1)::Parameters = [m.ρQR, m.ρARA]
 params!(m::GQR_ARA1, p::Parameters) = begin; m.ρQR, m.ρARA = p; nothing; end
 nbparams(m::GQR_ARA1) = 2
@@ -133,6 +143,7 @@ function GQR_ARAInf(ρQR::Parameter, ρARA::Parameter, f::Function=identity)
     return m
 end
 GQR_ARA∞(ρQR::Parameter,ρARA::Parameter, f::Function=identity) = GQR_ARAInf(ρQR,ρARA, f)
+show(io::IO, m::GQR_ARAInf) = print(io, "GQR_ARA∞(",m.ρQR , ", ", m.ρARA ,", ", m.f,", ", m.K, ")")
 params(m::GQR_ARAInf)::Parameters = [m.ρQR, m.ρARA]
 params!(m::GQR_ARAInf, p::Parameters) = begin; m.ρQR, m.ρARA = p; nothing; end
 nbparams(m::GQR_ARAInf) = 2
@@ -157,6 +168,7 @@ function GQR_ARAm(ρQR::Parameter, ρARA::Parameter, m::Int, f::Function=identit
     end
     return m
 end
+show(io::IO, m::GQR_ARAm) = print(io, "GQR_ARAₘ(",m.ρQR , ", ", m.ρARA ,", ",m.m,", ", m.f,", ", m.K, ")")
 params(m::GQR_ARAm)::Parameters = [m.ρQR, m.ρARA]
 params!(m::GQR_ARAm, p::Parameters) = begin; m.ρQR, m.ρARA = p; nothing; end
 nbparams(m::GQR_ARAm) = 2

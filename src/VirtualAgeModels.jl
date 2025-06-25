@@ -1,7 +1,7 @@
 module VirtualAgeModels
 
 using Random, DataFrames, Optim, Distributions, Plots #or Makie.jl
-import Base: first
+import Base: first, show
 import Plots: plot
 import StatsBase: predict
 import Distributions: params, params!
