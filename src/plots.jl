@@ -14,86 +14,83 @@ const symbol2typeplot = Dict(
     :f => ConditionalProbabilityDensityFunctionPlot, :conditional_probability_density_function => ConditionalProbabilityDensityFunctionPlot
 )
 
-import Plots.plot
-import Plots.plot!
-
-function plot(m::Model, type::Symbol=:v)
+function plot(m::VirtualAgeModel, type::Symbol=:v)
     plot(m, symbol2typeplot[type])
 end
 
-function plot!(m::Model, type::Symbol)
+function plot!(m::VirtualAgeModel, type::Symbol)
     plot!(m, symbol2typeplot[type])
 end
 
 ## The following methods are more for internal use
 
-function plot(m::Model, ::Type{VirtualAgePlot})
+function plot(m::VirtualAgeModel, ::Type{VirtualAgePlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end])
     # println(infos)
     plot(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot!(m::Model, ::Type{VirtualAgePlot})
+function plot!(m::VirtualAgeModel, ::Type{VirtualAgePlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end])
     # println(infos)
     plot!(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot(m::Model, ::Type{IntensityPlot})
+function plot(m::VirtualAgeModel, ::Type{IntensityPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:i)
     # println(infos)
     plot(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot!(m::Model, ::Type{IntensityPlot})
+function plot!(m::VirtualAgeModel, ::Type{IntensityPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:i)
     # println(infos)
     plot!(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot(m::Model, ::Type{CummulativeIntensityPlot})
+function plot(m::VirtualAgeModel, ::Type{CummulativeIntensityPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:I)
     # println(infos)
     plot(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot!(m::Model, ::Type{CummulativeIntensityPlot})
+function plot!(m::VirtualAgeModel, ::Type{CummulativeIntensityPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:I)
     # println(infos)
     plot!(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot(m::Model, ::Type{ConditionalCummulativeDensityFunctionPlot})
+function plot(m::VirtualAgeModel, ::Type{ConditionalCummulativeDensityFunctionPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:F)
     # println(infos)
     plot(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot!(m::Model, ::Type{ConditionalCummulativeDensityFunctionPlot})
+function plot!(m::VirtualAgeModel, ::Type{ConditionalCummulativeDensityFunctionPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:F)
     # println(infos)
     plot!(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot(m::Model, ::Type{ConditionalSurvivalPlot})
+function plot(m::VirtualAgeModel, ::Type{ConditionalSurvivalPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:S)
     # println(infos)
     plot(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot!(m::Model, ::Type{ConditionalSurvivalPlot})
+function plot!(m::VirtualAgeModel, ::Type{ConditionalSurvivalPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:S)
     # println(infos)
     plot!(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot(m::Model, ::Type{ConditionalProbabilityDensityFunctionPlot})
+function plot(m::VirtualAgeModel, ::Type{ConditionalProbabilityDensityFunctionPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:f)
     # println(infos)
     plot(infos.x, infos.y, legend=nothing, color=:blue)
 end
 
-function plot!(m::Model, ::Type{ConditionalProbabilityDensityFunctionPlot})
+function plot!(m::VirtualAgeModel, ::Type{ConditionalProbabilityDensityFunctionPlot})
     infos = virtual_age_infos(m, m.time[1], m.time[end], type=:f)
     # println(infos)
     plot!(infos.x, infos.y, legend=nothing, color=:blue)

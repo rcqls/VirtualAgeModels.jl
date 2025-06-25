@@ -1,13 +1,13 @@
 import Base.rand
 
-function rand(model::Model, stop::Union{Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
+function rand(model::VirtualAgeModel, stop::Union{Int, Vector{Any}}; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
     stop_policy_ = stop_policy(stop)
     return rand(model, stop_policy_, system = system, datacov = datacov)
 end
 
-rand(model::Model; system::Int = 1, datacov::DataFrame=DataFrame()) = rand(model, 100, system = system, datacov = datacov)
+rand(model::VirtualAgeModel; system::Int = 1, datacov::DataFrame=DataFrame()) = rand(model, 100, system = system, datacov = datacov)
 
-function rand(model::Model, stop_policy::Expr; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
+function rand(model::VirtualAgeModel, stop_policy::Expr; system::Int=1, datacov::DataFrame=DataFrame())::DataFrame
     if has_maintenance_policy(model)
         first(model.maintenance_policy)
     end
@@ -58,16 +58,17 @@ function rand(model::Model, stop_policy::Expr; system::Int=1, datacov::DataFrame
     if system == 1
         data = data[:,[:time, :type]]
     end
-    df = data#LD: df = data[2:size(data,1),:]
+    df = data #LD: df = data[2:size(data,1),:]
     if (system > 1) && (length(model.varnames)==2) #LD: (system > 1)
-        rename!(df, vcat(["System"], model.varnames) )
+        rename!(df, vcat(["system"], model.varnames) )
     else
         rename!(df, model.varnames)
     end
+    data!(model, df)
     df
 end
 
-function init_sim!(model::Model)
+function init_sim!(model::VirtualAgeModel)
     #// Almost everything in the 5 following lines are defined in model->init_computation_values() (but this last one initializes more than this 5 lines)
     model.Vright=0
     model.A=1
@@ -80,7 +81,7 @@ function init_sim!(model::Model)
     model.type = [-1]
 end
 
-function ok(model::Model, stop_policy::Expr)::Bool
+function ok(model::VirtualAgeModel, stop_policy::Expr)::Bool
     s = length(model.time) - 1 # 1st is 0 time to be removed when returned
     t = model.time[model.k]
     eval(:(s=$s))
@@ -100,11 +101,11 @@ end
 
 ### Simulator is no more than model with stop_policy embedded together
 mutable struct Simulator
-    model::Model
+    model::VirtualAgeModel
     stop_policy::Expr
 end
 
-function Simulator(model::Model, stop::Union{Nothing, Int, Vector{Any}})::Simulator
+function Simulator(model::VirtualAgeModel, stop::Union{Nothing, Int, Vector{Any}})::Simulator
     sim = Simulator(model, stop_policy(stop))
     init_sim!(model)
     return sim

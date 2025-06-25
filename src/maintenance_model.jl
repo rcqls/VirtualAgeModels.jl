@@ -10,50 +10,58 @@ mutable struct ARA1 <: AbstractMaintenanceModel
     priors::Priors
 end
 ARA1(ρ::Parameter) = ARA1(ρ,[nothing])
+show(io::IO, m::ARA1) = print(io, "ARA₁(",isnothing(m.priors[1]) ? m.ρ : "~" * string(m.priors[1]), ")")
 params(m::ARA1)::Parameters = [m.ρ]
 params!(m::ARA1, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::ARA1) = 1
 ARA1(ρ::Prior) = ARA1(0.0,[ρ])
+## Aliases with subindex
+ARA₁(ρ) = ARA1(ρ)
 mutable struct ARAInf <: AbstractMaintenanceModel 
 	ρ::Parameter
     priors::Priors
 end
 ARAInf(ρ::Parameter) = ARAInf(ρ,[nothing])
-ARA∞(ρ::Parameter) = ARAInf(ρ)
+show(io::IO, m::ARAInf) = print(io, "ARA∞(",isnothing(m.priors[1]) ? m.ρ : "~" * string(m.priors[1]), ")")
 params(m::ARAInf)::Parameters = [m.ρ]
 params!(m::ARAInf, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::ARAInf) = 1
 ARAInf(ρ::Prior) = ARAInf(0.0,[ρ])
-ARA∞(ρ::Prior) = ARAInf(ρ)
+ARA∞(ρ) = ARAInf(ρ)
 mutable struct ARAm <: AbstractMaintenanceModel
     ρ::Parameter
     m::Int
     priors::Priors
 end
 ARAm(ρ::Parameter,m::Int) = ARAm(ρ,m,[nothing])
+show(io::IO, m::ARAm) = print(io, "ARAₘ(",isnothing(m.priors[1]) ? m.ρ : "~" * string(m.priors[1]), ", ", m.m , ")")
 params(m::ARAm)::Parameters = [m.ρ]
 params!(m::ARAm, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::ARAm) = 1 # only parameters considered in the optim
 ARAm(ρ::Prior,m::Int) = ARAm(0.0,m,[ρ])
-
+ARAₘ(ρ,m::Int) = ARAm(ρ,m)
 struct AGAN <: AbstractMaintenanceModel
 end
+show(io::IO, m::AGAN) = print(io, "AGAN()")
 params(m::AGAN)::Parameters = []
 params!(m::AGAN, p::Parameters) = nothing
 nbparams(m::AGAN) = 0
 struct ABAO <: AbstractMaintenanceModel
 end
+show(io::IO, m::ABAO) = print(io, "ABAO()")
 params(m::ABAO)::Parameters = []
 params!(m::ABAO, p::Parameters) = nothing
 nbparams(m::ABAO) = 0
 
 struct AGAP <: AbstractMaintenanceModel
 end
+show(io::IO, m::AGAP) = print(io, "AGAP()")
 params(m::AGAP)::Parameters = []
 params!(m::AGAP, p::Parameters) = nothing
 nbparams(m::AGAP) = 0
 mutable struct QAGAN <: AbstractMaintenanceModel
 end
+show(io::IO, m::QAGAN) = print(io, "QAGAN()")
 params(m::QAGAN)::Parameters = []
 params!(m::QAGAN, p::Parameters) = nothing
 nbparams(m::QAGAN) = 0
@@ -63,6 +71,7 @@ mutable struct QR <: AbstractMaintenanceModel
     priors::Priors
 end
 QR(ρ::Parameter) = QR(ρ,[nothing])
+show(io::IO, m::QR) = print(io, "QR(",isnothing(m.priors[1]) ? m.ρ : "~" * string(m.priors[1]) ,")")
 params(m::QR)::Parameters = [m.ρ]
 params!(m::QR, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::QR) = 1
@@ -86,6 +95,7 @@ function GQR(ρ::Parameter, f::Function=identity)
     end
     return m
 end
+show(io::IO, m::GQR) = print(io, "GQR(",isnothing(m.priors[1]) ? m.ρ : "~" * string(m.priors[1]) , ", ", m.f,", ", m.K, ")")
 params(m::GQR)::Parameters = [m.ρ]
 params!(m::GQR, p::Parameters) = begin;m.ρ = p[1]; nothing; end
 nbparams(m::GQR) = 1
@@ -109,6 +119,7 @@ function GQR_ARA1(ρQR::Parameter, ρARA::Parameter, f::Function=identity)
     end
     return m
 end
+show(io::IO, m::GQR_ARA1) = print(io, "GQR_ARA₁(",isnothing(m.priors[1]) ? m.ρQR : "~" * string(m.priors[1]) , ", ", isnothing(m.priors[2]) ? m.ρARA : "~" * string(m.priors[2]) ,", ", m.f,", ", m.K, ")")
 params(m::GQR_ARA1)::Parameters = [m.ρQR, m.ρARA]
 params!(m::GQR_ARA1, p::Parameters) = begin; m.ρQR, m.ρARA = p; nothing; end
 nbparams(m::GQR_ARA1) = 2
@@ -117,6 +128,7 @@ function GQR_ARA1(ρQR::Prior, ρARA::Prior, f::Function=identity)
     m.priors = [ρQR,ρARA]
     return m
 end
+GQR_ARA₁(ρQR, ρARA, f) = GQR_ARA1(ρQR, ρARA, f)
 
 mutable struct GQR_ARAInf <:  GQRMaintenanceModel
     ρQR::Parameter
@@ -133,6 +145,7 @@ function GQR_ARAInf(ρQR::Parameter, ρARA::Parameter, f::Function=identity)
     return m
 end
 GQR_ARA∞(ρQR::Parameter,ρARA::Parameter, f::Function=identity) = GQR_ARAInf(ρQR,ρARA, f)
+show(io::IO, m::GQR_ARAInf) = print(io, "GQR_ARA∞(",isnothing(m.priors[1]) ? m.ρQR : "~" * string(m.priors[1]) , ", ", isnothing(m.priors[2]) ? m.ρARA : "~" * string(m.priors[2]) ,", ", m.f,", ", m.K, ")")
 params(m::GQR_ARAInf)::Parameters = [m.ρQR, m.ρARA]
 params!(m::GQR_ARAInf, p::Parameters) = begin; m.ρQR, m.ρARA = p; nothing; end
 nbparams(m::GQR_ARAInf) = 2
@@ -157,6 +170,7 @@ function GQR_ARAm(ρQR::Parameter, ρARA::Parameter, m::Int, f::Function=identit
     end
     return m
 end
+show(io::IO, m::GQR_ARAm) = print(io, "GQR_ARAₘ(",isnothing(m.priors[1]) ? m.ρQR : "~" * string(m.priors[1]) , ", ", isnothing(m.priors[2]) ? m.ρARA : "~" * string(m.priors[2]) ,", ",m.m,", ", m.f,", ", m.K, ")")
 params(m::GQR_ARAm)::Parameters = [m.ρQR, m.ρARA]
 params!(m::GQR_ARAm, p::Parameters) = begin; m.ρQR, m.ρARA = p; nothing; end
 nbparams(m::GQR_ARAm) = 2
@@ -165,8 +179,9 @@ function GQR_ARAm(ρQR::Prior, ρARA::Prior, m::Int, f::Function=identity)
     m.priors = [ρQR,ρARA]
     return m
 end
+GQR_ARAₘ(ρQR, ρARA, m, f) = GQR_ARAm(ρQR, ρARA, m, f)
 
-function update!(m::ARA1, model::AbstractModel; gradient::Bool=false, hessian::Bool=false)
+function update!(m::ARA1, model::AbstractVirtualAgeModel; gradient::Bool=false, hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -257,7 +272,7 @@ function update!(m::ARA1, model::AbstractModel; gradient::Bool=false, hessian::B
     model.Vright += prov
 end
 
-function update!(m::ARAInf, model::AbstractModel; gradient::Bool=false, hessian::Bool=false)
+function update!(m::ARAInf, model::AbstractVirtualAgeModel; gradient::Bool=false, hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -351,7 +366,7 @@ function update!(m::ARAInf, model::AbstractModel; gradient::Bool=false, hessian:
 end
 
 
-function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::ARAm, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1;
 
     nk = model.k-1 #LD: model.k
@@ -551,7 +566,7 @@ function update!(m::ARAm, model::AbstractModel;gradient::Bool=false,hessian::Boo
 end
 
 
-function update!(m::AGAN, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::AGAN, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -583,7 +598,7 @@ function update!(m::AGAN, model::AbstractModel;gradient::Bool=false,hessian::Boo
     end
 end
 
-function update!(m::ABAO, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::ABAO, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
     nk = model.k-1 #LD: model.k
@@ -652,7 +667,7 @@ function update!(m::ABAO, model::AbstractModel;gradient::Bool=false,hessian::Boo
     model.Vright += prov
 end
 
-function update!(m::AGAP, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::AGAP, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
      
     inc!(model) #model.k += 1
 
@@ -704,7 +719,7 @@ function update!(m::AGAP, model::AbstractModel;gradient::Bool=false,hessian::Boo
 end
 
 
-function update!(m::QAGAN, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::QAGAN, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
     nk = model.k-1 #LD: model.k
@@ -743,7 +758,7 @@ function update!(m::QAGAN, model::AbstractModel;gradient::Bool=false,hessian::Bo
 end
 
 
-function update!(m::QR, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::QR, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
     nk = model.k-1 #LD: model.k
@@ -791,7 +806,7 @@ function update!(m::QR, model::AbstractModel;gradient::Bool=false,hessian::Bool=
     end
 end
 
-function update!(m::GQR, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
     nk = model.k-1 #LD: model.k
     if nk > model.mu 
@@ -845,7 +860,7 @@ function update!(m::GQR, model::AbstractModel;gradient::Bool=false,hessian::Bool
     end
 end
 
-function update!(m::GQR_ARA1, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR_ARA1, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     m.K += 1
     inc!(model) #model.k += 1;
 
@@ -967,7 +982,7 @@ function update!(m::GQR_ARA1, model::AbstractModel;gradient::Bool=false,hessian:
     model.A *= m.ρQR^δ
 end
 
-function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR_ARAInf, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1
 
 
@@ -1091,7 +1106,7 @@ function update!(m::GQR_ARAInf, model::AbstractModel;gradient::Bool=false,hessia
     model.A = m.ρQR^δ * model.A
 end
 
-function update!(m::GQR_ARAm, model::AbstractModel;gradient::Bool=false,hessian::Bool=false)
+function update!(m::GQR_ARAm, model::AbstractVirtualAgeModel;gradient::Bool=false,hessian::Bool=false)
     inc!(model) #model.k += 1;
     m.K += 1
 

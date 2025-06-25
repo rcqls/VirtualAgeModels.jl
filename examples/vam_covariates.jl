@@ -24,6 +24,7 @@ dataCov = @rget dataCov
 dataDF= @rget dataDF
 θ =  @rget theta
 m = @vam( System & Time & Type ~ (ARAInf(0.4) | Weibull(0.001,1.5| 1.3*cov1 + -2.2*cov2)), data=dataDF, datacov=dataCov)
+m
 lnL = res[:lnL]
 dlnL = res[:dlnL]
 d2lnL = res[:d2lnL]

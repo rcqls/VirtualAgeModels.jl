@@ -1,17 +1,18 @@
 module VirtualAgeModels
 
-using Random, DataFrames, Optim, Distributions, Plots
-import Base.first
-import Plots.plot
+using Random, DataFrames, Optim, Distributions, Plots #or Makie.jl
+import Base: first, show
+import Plots: plot
+import StatsBase: predict
+import Distributions: params, params!
 
-
-export Simulator
+export plot
+export VirtualAgeModel, Simulator
 export parse_model, @vam, @stop, params, params!, nbparams, data, data!, mle, bayesian
 export contrast, gradient, hessian
-export plot
 
 
-abstract type AbstractModel end
+abstract type AbstractVirtualAgeModel end
 
 const Prior = Union{Nothing,Distribution}
 const Priors = Vector{Prior}

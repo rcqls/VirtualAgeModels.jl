@@ -1,4 +1,4 @@
-function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
+function mle(model::VirtualAgeModel, θ::Vector{Float64},  data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool = true, fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
     mle = MLE(model, data, datacov)
     # TODO: check boundary for fixed
     if fixed isa Vector{Bool}
@@ -44,31 +44,31 @@ function mle(model::Model, θ::Vector{Float64},  data::DataFrame=DataFrame(), da
     return mle
 end
 
-function mle(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
+function mle(model::VirtualAgeModel, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); fixed::Union{Vector{Int},Vector{Bool}} = Bool[], method = Newton())
     θ = params(model)
     mle(model, θ, data, datacov; fixed=fixed, method=method)
 end
 
-function contrast(model::Model, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Float64
-        m = MLE(model, data, datacov)
-        return contrast(m, θ, profile = profile)
+function contrast(model::VirtualAgeModel, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Float64
+    m = MLE(model, data, datacov)
+    return contrast(m, θ, profile = profile)
 end
 
-contrast(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = contrast(model, params(model), data; profile = profile, datacov = datacov)
+contrast(model::VirtualAgeModel, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = contrast(model, params(model), data; profile = profile, datacov = datacov)
 
-function gradient(model::Model, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Vector{Float64}
+function gradient(model::VirtualAgeModel, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Vector{Float64}
     m = MLE(model, data, datacov)
     return gradient(m, θ, profile = profile)
 end
 
-gradient(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = gradient(model, params(model), data; profile = profile, datacov = datacov)
+gradient(model::VirtualAgeModel, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = gradient(model, params(model), data; profile = profile, datacov = datacov)
 
-function hessian(model::Model, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Matrix{Float64}
+function hessian(model::VirtualAgeModel, θ::Vector{Float64}, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true)::Matrix{Float64}
     m = MLE(model, data, datacov)
     return hessian(m, θ, profile = profile)
 end
 
-hessian(model::Model, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = hessian(model, params(model), data; profile = profile, datacov = datacov)
+hessian(model::VirtualAgeModel, data::DataFrame=DataFrame(), datacov::DataFrame=DataFrame(); profile::Bool=true) = hessian(model, params(model), data; profile = profile, datacov = datacov)
 
 mutable struct MLEOptim
     profile::Bool # !(1 in fixed)
@@ -78,7 +78,7 @@ mutable struct MLEOptim
 end
 
 mutable struct MLE
-    model::Model
+    model::VirtualAgeModel
     left_censors::Vector{Int} #CAREFUL: this is a vector of indices!
     left_censor::Int #left_censor for current system
     optim::MLEOptim
@@ -86,7 +86,7 @@ mutable struct MLE
     MLE() = new()
 end
 
-function MLE(model::Model)::MLE
+function MLE(model::VirtualAgeModel)::MLE
     mle = MLE()
     mle.model = model
     init!(mle.model)
@@ -96,7 +96,7 @@ function MLE(model::Model)::MLE
     return mle
 end
 
-function MLE(model::Model, data::DataFrame, datacov::DataFrame)::MLE
+function MLE(model::VirtualAgeModel, data::DataFrame, datacov::DataFrame)::MLE
     mle = MLE()
     mle.model = model
     init!(mle.model)
