@@ -109,6 +109,12 @@ function MLE(model::VirtualAgeModel, data::DataFrame, datacov::DataFrame)::MLE
     left_censors!(mle, Int[])
     return mle
 end
+
+function show(io::IO, mle::MLE)
+    println(io, mle.model)
+    print(io, mle.optim)
+end
+
 function params(mle::MLE)::Vector{Float64}
     if mle.optim.profile
         [αEst(mle, params(mle.model)); params(mle.model)[2:end]]

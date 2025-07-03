@@ -2,11 +2,11 @@ module VirtualAgeModels
 
 using Random, DataFrames, Optim, Distributions, Plots #or Makie.jl
 import Base: first, show
-import Plots: plot
+import Plots: plot, plot!
 import StatsBase: predict
 import Distributions: params, params!
 
-export plot
+export plot, plot!
 export VirtualAgeModel, Simulator
 export parse_model, @vam, @stop, params, params!, nbparams, data, data!, mle, bayesian
 export contrast, gradient, hessian
